@@ -42,7 +42,7 @@ fc-cache -fv
 
 ### **1. Clone Your Dotfiles Repository**
 ```sh
-git clone <your-dotfiles-repo-url> ~/.dotfiles
+git clone https://github.com/csode/setup.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 
@@ -79,6 +79,5 @@ source ~/.bashrc
 ---
 
 ## **Final Steps**
-Restart your system or log out and log back in to apply all changes. Enjoy your setup! 🚀
-
+Restart your system or log out and log back in to apply all changes. 
 

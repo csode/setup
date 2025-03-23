@@ -36,20 +36,24 @@ return {
 				},
 			})
 
-			-- Setup LSP Servers
 			local servers = {
-				ts_ls = {},
-				solargraph = {},
+				ts_ls = {}, -- Fixed TypeScript LSP name
 				html = {},
 				lua_ls = {},
 				rust_analyzer = {},
 				pyright = {},
-				clangd = {},
+				clangd = {
+					capabilities = capabilities,
+					cmd = { "clangd", "--log=verbose" },
+					filetypes = { "c", "cpp", "objc", "objcpp" }, -- Explicit filetypes for C++
+					on_attach = function(client)
+						print("Clangd attached successfully!")
+					end,
+				},
 				cssls = {},
 				jsonls = {},
 				eslint = {},
 			}
-
 			for server, config in pairs(servers) do
 				lspconfig[server].setup(vim.tbl_extend("force", { capabilities = capabilities }, config))
 			end
