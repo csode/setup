@@ -53,6 +53,6 @@ alias ls='ls --color=auto'
 alias ll='ls -lah'
 alias la='ls -A'
 
+alias gpwd='cat ~/Documents/token.md | xclip -selection clipboard  '
 alias reload="source ~/.bashrc"
-
 
