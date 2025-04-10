@@ -4,8 +4,6 @@ vim.cmd("set tabstop=2")
 vim.cmd("set softtabstop=2")
 vim.cmd("set shiftwidth=2")
 vim.g.mapleader = " "
-vim.g.background = "light"
-vim.o.laststatus = 0
 
 -- General options
 vim.opt.guicursor = ""
@@ -30,25 +28,48 @@ vim.opt.incsearch = true
 
 -- Visual settings
 vim.opt.termguicolors = true
-vim.opt.scrolloff = 8
+vim.opt.scrolloff = 50
 vim.opt.signcolumn = "yes"
 vim.opt.isfname:append("@-@")
 vim.opt.updatetime = 50
 vim.opt.colorcolumn = ""
+vim.opt.shortmess:append("I") -- This disables the intro message
 
--- Status line settings
-vim.o.laststatus = 2 -- Always show the statusline
-vim.o.cursorline = true
+vim.opt.showmode = false
+vim.opt.showcmd = false
 
--- Git branch function for status line
-function GitBranch()
-    local handle = io.popen("git rev-parse --abbrev-ref HEAD 2>/dev/null")
-    local result = handle:read("*a") or ""
-    handle:close()
-    result = result:gsub("\n", "") -- Remove newline
-    return result ~= "" and "Git branch - " .. result or ""
-end
+vim.o.cursorline = false
+-- Instead of vim.diagnostic.disable()
+vim.diagnostic.config({
+    virtual_text = false,
+    signs = false,
+    underline = false,
+    update_in_insert = false,
+    severity_sort = false
+})
 
--- Status line configuration
-vim.cmd("highlight StatusLine guifg=#FFFFFF ctermfg=15")
-vim.o.statusline = "%#StatusLine# %t %m %y %{v:lua.GitBranch()} [%l/%L] %p%%"
+vim.api.nvim_create_autocmd("BufEnter", {
+    callback = function()
+        if vim.bo.filetype == "zig" then
+            vim.cmd("colorscheme tokyonight-night")
+        else
+            vim.cmd("colorscheme rose-pine-moon")
+        end
+    end,
+})
+
+vim.api.nvim_create_autocmd("LspAttach", {
+    callback = function(e)
+        local opts = { buffer = e.buf }
+        vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+        vim.keymap.set("n", "<leader>vws", vim.lsp.buf.workspace_symbol, opts)
+        vim.keymap.set("n", "<leader>vd", vim.diagnostic.open_float, opts)
+        vim.keymap.set("n", "<leader>vca", vim.lsp.buf.code_action, opts)
+        vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
+        vim.keymap.set("n", "<leader>vrn", vim.lsp.buf.rename, opts)
+        vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
+        vim.keymap.set("n", "[d", vim.diagnostic.goto_next, opts)
+        vim.keymap.set("n", "]d", vim.diagnostic.goto_prev, opts)
+    end,
+})

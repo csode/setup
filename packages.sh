@@ -18,7 +18,7 @@ fi
 install_deps() {
     case "$DISTRO" in
         ubuntu|debian|pop)
-            sudo apt update && sudo apt install -y dconf i3 ibus kitty neofetch nvim polybar build-essential git cmake ninja-build pkg-config libx11-dev libxft-dev libxinerama-dev
+            sudo apt update && sudo apt install -y dconf emacs i3 ibus kitty neofetch build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev
             ;;
         arch|manjaro)
             sudo pacman -Syu --noconfirm base-devel git cmake ninja xorg-x11proto-devel libx11 libxft libxinerama dconf i3 ibus kitty neofetch nvim polybar;

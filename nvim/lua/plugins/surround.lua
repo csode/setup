@@ -3,7 +3,10 @@ return {
 	{
 		"tpope/vim-surround",
 		config = function()
-			-- Optional: Add custom key mappings or configurations here
+			vim.api.nvim_set_keymap("n", "<leader>s*", "ysiw*", { noremap = true, silent = true })
+			vim.api.nvim_set_keymap("n", '<leader>s"', 'ysiw"', { noremap = true, silent = true })
+			vim.api.nvim_set_keymap("n", "<leader>s#", "ysiw#", { noremap = true, silent = true })
+			vim.api.nvim_set_keymap("n", "<leader>sf", "ysiw/*", { noremap = true, silent = true })
 		end,
 	},
 }

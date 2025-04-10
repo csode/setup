@@ -1,71 +1,62 @@
 return {
-	{
-		"williamboman/mason.nvim",
-		lazy = false,
-		config = function()
-			require("mason").setup()
-		end,
-	},
-	{
-		"williamboman/mason-lspconfig.nvim",
-		lazy = false,
-		opts = {
-			auto_install = true,
-		},
-	},
-	{
-		"neovim/nvim-lspconfig",
-		lazy = false,
-		config = function()
-			local capabilities = require("cmp_nvim_lsp").default_capabilities()
+    {
+        "williamboman/mason.nvim",
+        lazy = false,
+        config = function()
+            require("mason").setup()
+        end,
+    },
+    {
+        "williamboman/mason-lspconfig.nvim",
+        lazy = false,
+        opts = {
+            auto_install = true,
+        },
+    },
+    {
+        "neovim/nvim-lspconfig",
+        lazy = false,
+        config = function()
+            local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-			local lspconfig = require("lspconfig")
+            local lspconfig = require("lspconfig")
+            lspconfig.ts_ls.setup({
+                capabilities = capabilities,
+            })
+            lspconfig.html.setup({
+                capabilities = capabilities,
+                filetypes = { "html", "htmldjango", "htmx", "templ", "blade" }, -- Added htmx support
+            })
+            lspconfig.solargraph.setup({
+                capabilities = capabilities,
+            })
+            lspconfig.html.setup({
+                capabilities = capabilities,
+            })
+            lspconfig.lua_ls.setup({
+                capabilities = capabilities,
+            })
+            -- Added Rust LSP (rust-analyzer)
+            lspconfig.rust_analyzer.setup({
+                capabilities = capabilities,
+            })
 
-			-- Ensure Mason installs the VSCode Language Server
-			require("mason-lspconfig").setup({
-				ensure_installed = {
-					"ts_ls", -- TypeScript
-					"html", -- HTML
-					"lua_ls", -- Lua
-					"rust_analyzer", -- Rust
-					"pyright", -- Python
-					"clangd", -- C/C++
-					"cssls", -- CSS
-					"jsonls", -- JSON
-					"eslint", -- ESLint
-				},
-			})
+            -- Added Python LSP (pyright)
+            lspconfig.pyright.setup({
+                capabilities = capabilities,
+            })
 
-			local servers = {
-				ts_ls = {}, -- Fixed TypeScript LSP name
-				html = {},
-				lua_ls = {},
-				rust_analyzer = {},
-				pyright = {},
-				clangd = {
-					capabilities = capabilities,
-					cmd = { "clangd", "--log=verbose" },
-					filetypes = { "c", "cpp", "objc", "objcpp" }, -- Explicit filetypes for C++
-					on_attach = function(client)
-						print("Clangd attached successfully!")
-					end,
-				},
-				cssls = {},
-				jsonls = {},
-				eslint = {},
-			}
-			for server, config in pairs(servers) do
-				lspconfig[server].setup(vim.tbl_extend("force", { capabilities = capabilities }, config))
-			end
+            -- Added C/C++ LSP (clangd)
+            lspconfig.clangd.setup({
+                capabilities = capabilities,
+            })
 
-			-- Keybindings
-			local opts = { noremap = true, silent = true }
-			vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-			vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-			vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-			vim.keymap.set("n", "fq", vim.lsp.buf.code_action, opts)
-			vim.keymap.set("n", "do", ":copen<CR>", opts) -- Open diagnostics
-			vim.keymap.set("n", "dc", ":cclose<CR>", opts) -- Close diagnostics
-		end,
-	},
+            vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
+            vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, {})
+            vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, {})
+            vim.keymap.set("n", "<leader>fq", vim.lsp.buf.code_action, {})
+            vim.keymap.set('n', '<leader>dq', ':copen<CR>', { noremap = true, silent = true })
+            vim.keymap.set('n', '<leader>dq', ':cclose<CR>', { noremap = true, silent = true })
+        end,
+    },
 }

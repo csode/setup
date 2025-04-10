@@ -5,18 +5,10 @@ Welcome to my Neovim configuration. This is my personal setup optimized for deve
 [📚 View Neovim Cheatsheet](./CHEATSHEET.md)
 
 ## Preview
-![first](first.png)
+![first](change2.png)
 ![second](second.png)
-
-## Features
-- 🚀 Fast startup time with lazy loading
-- ✨ Auto completion with intelligent suggestions
-- 🔍 Fuzzy finding with Telescope
-- 🌳 Syntax highlighting via Treesitter
-- 📝 Auto formatting on save
-- 🔧 Built-in LSP configuration
-- 📁 File navigation with Oil.nvim
-- 📌 Quick file switching with Harpoon
+![third](third.png)
+![fourth](fourth.png)
 
 ## Plugin List
 - [Lazy](https://github.com/folke/lazy.nvim) - Modern plugin manager
@@ -28,6 +20,8 @@ Welcome to my Neovim configuration. This is my personal setup optimized for deve
 ## Theme
 - [Vague](https://github.com/vague2k/vague.nvim) - Modern minimal theme
 
+## Change
+- [Change Catalog](CHANGELOG.md) - Modern minimal theme
 ## Requirements
 - Neovim >= 0.9.0
 - Git
@@ -85,10 +79,4 @@ If you encounter any issues:
 1. Make sure all requirements are installed
 2. Check `:checkhealth` output
 3. Open an issue on GitHub
-
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-MIT
 
