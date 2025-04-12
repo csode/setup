@@ -11,6 +11,7 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 
 
 exec --no-startup-id nm-applet
+exec --no-startup-id blueman-applet
 exec_always --no-startup-id picom --config ~/.config/picom.conf --experimental-backends
 exec_always setxkbmap -option "caps:escape"
 exec_always pipewire 
@@ -20,7 +21,7 @@ exec /user/bin/emacs --daemon
 exec_always --no-startup-id picom  
 
 set $refresh_i3status killall -SIGUSR1 i3status
-exec_always feh --bg-scale ~/Pictures/Wallpapers/rosepine.png
+exec_always feh --bg-scale ~/Pictures/Wallpapers/animerosepine.png
 bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +10% && $refresh_i3status
 bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -10% && $refresh_i3status
 bindsym XF86MonBrightnessUp exec --no-startup-id light -A 10%
@@ -35,7 +36,6 @@ floating_modifier $mod
 exec --no-startup-id xclip -selection clipboard
 exec --no-startup-id clipman 
 
-bindsym $mod+Return exec ghostty
 
 # kill focused window
 bindsym $mod+q kill
@@ -165,19 +165,19 @@ client.background        #2B2C2B
 bar {
         status_command i3status
 }
-for_window [class="ghostty"]move to workspace $ws1
-for_window [class="brave"]move to workspace $ws3
+for_window [class="kitty"]move to workspace $ws1
+for_window [class="brave-browser"]move to workspace $ws3
 for_window [class="virt-manager"]move to workspace $ws7
 for_window [class="obs"] move to workspace $ws5
 for_window [class="Gimp"]move to workspace $ws8
 for_window [class="Thunar"] move to workspace $ws6
 
-bindsym $mod+Shift+m workspace $ws8; exec ~/AppImages/GIMP-3.0.0-x86_64.AppImage
+bindsym $mod+Shift+g workspace $ws8; exec gimp
 bindsym $mod+Shift+y workspace $ws10; exec pavucontrol
-bindsym $mod+b workspace $ws3; exec brave-browser-stable 
+bindsym $mod+b workspace $ws3; exec brave-browser 
 bindsym $mod+t workspace $ws6; exec flatpak run org.kde.kdenlive 
 bindsym $mod+Shift+f workspace $ws6; exec thunar 
-
+bindsym $mod+Return workspace $ws1; exec kitty
 bindsym $mod+bracketleft workspace prev
 bindsym $mod+Tab workspace prev
 bindsym $mod+bracketright workspace next
@@ -185,4 +185,6 @@ bindsym $mod+Shift+s exec scrot ~/Pictures/screenshot.png
 bindsym $mod+o workspace $ws5 exec obs
 bindsym $mod+Shift+o workspace $ws9 exec virt-manager
 bindsym $mod+c workspace $ws2 exec emacs
-bindsym $mod+Shift+Delete exec sudo poweroff
+bindsym $mod+Shift+Delete exec --no-startup-id systemctl poweroff
+bindsym $mod+Shift+z exec --no-startup-id bash -c 'cd /home/csode/packages/boomer && ./boomer'
+

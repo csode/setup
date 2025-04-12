@@ -46,7 +46,8 @@ print_banner() {
 
 print_section() {
     echo
-    echo -e "${BOLD}${MAGENTA}┌─ $1 ${"─"$(( 50 - ${#1} ))}┐${RESET}"
+    local padding=$(printf '%*s' $(( 50 - ${#1} )) | tr ' ' '─')
+    echo -e "${BOLD}${MAGENTA}┌─ $1 ${padding}┐${RESET}"
     echo
 }
 
@@ -185,30 +186,52 @@ install_packages() {
     
     case "$PACKAGE_MANAGER" in
         apt)
+            # Updated packages for Pop!_OS and Ubuntu-based systems
             sudo apt update
-            sudo apt install -y build-essential git pkg-config libx11-dev libxft-dev \
+            
+            # Try to install packages with error handling
+            for pkg in build-essential git pkg-config libx11-dev libxft-dev \
                 libxinerama-dev dconf-cli wget curl unzip ninja-build gettext \
                 libtool libtool-bin autoconf automake cmake g++ pkg-config \
                 i3 ibus kitty neofetch emacs virt-manager libvirt-daemon-system \
-                qemu-kvm virtinst bridge-utils qemu virt-viewer spice-client-gtk
+                qemu-system-x86 virtinst bridge-utils virt-viewer spice-client-gtk \
+                openssl libssl-dev libuv1-dev libluajit-5.1-dev \
+                libunibilium-dev libmsgpack-dev libtermkey-dev libvterm-dev \
+                lua5.1 lua-lpeg lua-mpack lua-bitop; do
+                
+                log "Installing $pkg..."
+                if ! sudo apt install -y $pkg; then
+                    warning "Failed to install $pkg. Continuing with installation..."
+                fi
+            done
+            ;;
+        dnf)
+            # Fixed package names for Fedora
+            sudo dnf install -y @development-tools git cmake ninja-build pkg-config \
+                libX11-devel libXft-devel libXinerama-devel dconf wget curl unzip \
+                gettext-devel libtool autoconf automake gcc-c++ \
+                i3 ibus kitty neofetch-bash emacs virt-manager libvirt \
+                qemu-kvm virt-install bridge-utils qemu virt-viewer spice-gtk3 \
+                openssl openssl-devel libuv-devel luajit-devel \
+                unibilium-devel msgpack-devel libtermkey-devel libvterm-devel \
+                lua5.1 lua-lpeg lua-mpack lua-bitop
             ;;
         pacman)
             sudo pacman -Syu --noconfirm base-devel git cmake ninja \
                 libx11 libxft libxinerama dconf i3 ibus kitty neofetch \
                 polybar emacs qemu libvirt virt-manager virt-viewer spice-gtk \
-                ebtables dnsmasq bridge-utils openbsd-netcat
-            ;;
-        dnf)
-            sudo dnf install -y @development-tools git cmake ninja-build pkg-config \
-                libX11-devel libXft-devel libXinerama-devel dconf-cli \
-                i3 ibus kitty neofetch polybar emacs virt-manager libvirt \
-                qemu-kvm virt-viewer spice-gtk
+                ebtables dnsmasq bridge-utils openbsd-netcat \
+                openssl libuv luajit unibilium msgpack-c libtermkey libvterm \
+                lua51 lua51-lpeg lua51-mpack lua51-bitop
             ;;
         zypper)
             sudo zypper install -y git cmake ninja dconf-tools \
                 libX11-devel libXft-devel libXinerama-devel \
                 i3 kitty neofetch emacs-nox virt-manager libvirt qemu-kvm \
-                virt-viewer spice-gtk
+                virt-viewer spice-gtk \
+                openssl libopenssl-devel libuv-devel luajit-devel \
+                libunibilium-devel libmsgpack-devel libtermkey-devel libvterm-devel \
+                lua51 lua51-lpeg lua51-mpack lua51-bitop
             ;;
         *)
             warning "Unsupported package manager. You may need to install dependencies manually."
@@ -558,6 +581,17 @@ build_neovim_from_source() {
     if ask_yes_no "Do you want to build Neovim from source?"; then
         log "Building Neovim from source..."
         
+        # Ensure we have all required dependencies
+        if [ "$PACKAGE_MANAGER" = "apt" ]; then
+            log "Installing additional Neovim dependencies..."
+            sudo apt update
+            sudo apt install -y ninja-build gettext libtool libtool-bin autoconf \
+                               automake cmake g++ pkg-config unzip curl \
+                               libluajit-5.1-dev libunibilium-dev libmsgpack-dev \
+                               libtermkey-dev libvterm-dev libuv1-dev \
+                               libluajit-5.1-dev lua-lpeg lua-mpack lua-bitop
+        fi
+        
         # Create build directory if it doesn't exist
         mkdir -p "$BUILD_DIR/neovim"
         cd "$BUILD_DIR/neovim"
@@ -643,6 +677,92 @@ build_clangd_from_source() {
 }
 
 # ┌──────────────────────────┐
+# │ NODE.JS INSTALLATION     │
+# └──────────────────────────┘
+build_nodejs_from_source() {
+    print_section "NODE.JS SOURCE BUILD"
+    
+    if ask_yes_no "Do you want to build Node.js from source?"; then
+        log "Building Node.js from source..."
+        
+        # Create build directory if it doesn't exist
+        mkdir -p "$BUILD_DIR/nodejs"
+        cd "$BUILD_DIR/nodejs"
+        
+        # Install dependencies based on the distribution
+        log "Installing Node.js build dependencies..."
+        case "$PACKAGE_MANAGER" in
+            apt)
+                sudo apt update && sudo apt install -y python3 g++ make python3-pip
+                ;;
+            dnf)
+                sudo dnf install -y python3 gcc-c++ make
+                ;;
+            pacman)
+                sudo pacman -S --noconfirm python gcc make
+                ;;
+            zypper)
+                sudo zypper install -y python3 gcc-c++ make
+                ;;
+            *)
+                warning "Couldn't identify package manager. You may need to install Node.js dependencies manually."
+                ;;
+        esac
+        
+        # Download latest Node.js source
+        if [ ! -d "node" ]; then
+            log "Cloning Node.js repository..."
+            git clone https://github.com/nodejs/node.git
+        else
+            log "Updating Node.js repository..."
+            cd node
+            git pull
+            cd ..
+        fi
+        
+        cd node
+        
+        # Check out the latest LTS version
+        log "Finding latest LTS version..."
+        git fetch --all --tags
+        LATEST_LTS=$(git tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | grep -E '^v[0-9]*[02468]\.' | tail -n1)
+        
+        if [ -n "$LATEST_LTS" ]; then
+            log "Checking out Node.js version: ${CYAN}$LATEST_LTS${RESET}"
+            git checkout "$LATEST_LTS"
+        else
+            warning "Could not determine latest LTS version. Using default branch."
+        fi
+        
+        # Configure and build Node.js
+        log "Configuring Node.js build..."
+        ./configure --prefix=/usr/local
+        
+        log "Building Node.js (this may take a while)..."
+        make -j$(nproc)
+        
+        log "Installing Node.js..."
+        sudo make install
+        
+        # Verify installation
+        if command -v node >/dev/null 2>&1; then
+            node_version=$(node --version)
+            npm_version=$(npm --version)
+            success "Node.js built and installed successfully:"
+            echo -e "  Node.js: ${CYAN}$node_version${RESET}"
+            echo -e "  npm:     ${CYAN}$npm_version${RESET}"
+        else
+            warning "Node.js was built but may not be in your PATH."
+        fi
+        
+        # Return to original directory
+        cd "$REPO_DIR"
+    else
+        log "Skipping Node.js source build."
+    fi
+}
+
+# ┌──────────────────────────┐
 # │ MAIN ENTRY POINT         │
 # └──────────────────────────┘
 main() {
@@ -670,6 +790,7 @@ main() {
     build_cmake_from_source
     build_neovim_from_source
     build_clangd_from_source
+    build_nodejs_from_source
     
     print_section "INSTALLATION COMPLETE"
     

@@ -1,5 +1,5 @@
 function ColorMyPencils(color)
-    color = color or "rose-pine-moon"
+    color = color or "rose-pine"
 
     -- Check if the colorscheme exists before applying it
     local ok, _ = pcall(vim.cmd, "colorscheme " .. color)
