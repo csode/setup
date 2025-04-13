@@ -2,11 +2,32 @@ return {
     "nvim-telescope/telescope.nvim",
 
     dependencies = {
-        "nvim-lua/plenary.nvim"
+        "nvim-lua/plenary.nvim",
+        "jvgrootveld/telescope-zoxide",
     },
 
     config = function()
-        require('telescope').setup({})
+        require('telescope').setup({
+            extensions = {
+                zoxide = {
+                    prompt_title = "[ Zoxide List ]",
+                    mappings = {
+                        default = {
+                            after_action = function(selection)
+                                if not selection or not selection.path then
+                                    print("No valid selection.")
+                                    return
+                                end
+                                vim.cmd("cd " .. selection.path)
+                                print("Changed directory to: " .. selection.path)
+                            end,
+                        },
+                    },
+                },
+            },
+        })
+
+        require("telescope").load_extension("zoxide")
 
         local builtin = require('telescope.builtin')
         vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
@@ -23,5 +44,11 @@ return {
             builtin.grep_string({ search = vim.fn.input("Grep > ") })
         end)
         vim.keymap.set('n', '<leader>vh', builtin.help_tags, {})
+
+        -- Zoxide picker keymap
+        vim.keymap.set('n', '<leader>z', function()
+            require("telescope").extensions.zoxide.list()
+        end, { desc = "Zoxide Jump" })
     end
 }
+

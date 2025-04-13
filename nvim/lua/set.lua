@@ -38,7 +38,8 @@ vim.opt.shortmess:append("I") -- This disables the intro message
 vim.opt.showmode = false
 vim.opt.showcmd = false
 
-vim.o.cursorline = false
+vim.o.cursorline = true
+
 -- Instead of vim.diagnostic.disable()
 vim.diagnostic.config({
     virtual_text = false,
@@ -48,16 +49,7 @@ vim.diagnostic.config({
     severity_sort = false
 })
 
-vim.api.nvim_create_autocmd("BufEnter", {
-    callback = function()
-        if vim.bo.filetype == "zig" then
-            vim.cmd("colorscheme tokyonight-night")
-        else
-            vim.cmd("colorscheme rose-pine-moon")
-        end
-    end,
-})
-
+-- Autocommand for LSP attach to bind LSP key mappings
 vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(e)
         local opts = { buffer = e.buf }
@@ -73,3 +65,4 @@ vim.api.nvim_create_autocmd("LspAttach", {
         vim.keymap.set("n", "]d", vim.diagnostic.goto_prev, opts)
     end,
 })
+
