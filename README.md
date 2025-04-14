@@ -37,8 +37,9 @@ I've included a `packages.sh` script that simplifies the installation of what I 
 
 ## Pictures :
 
-![1](1.png)
-![2](2.png)
+![image](image1.png)
+![image](image2.png)
+![image](image3.png)
 
 ## How to build :
 I have included scripts on how to install and uninstall so follow the guide from the script.
