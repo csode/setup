@@ -14,7 +14,6 @@ return {
                 highlight NormalNC guibg=NONE ctermbg=NONE
                 highlight LineNr guibg=NONE ctermbg=NONE
                 highlight CursorLineNr guibg=NONE ctermbg=NONE
-                highlight CursorLine guibg=NONE ctermbg=NONE
             ]])
         end,
     },

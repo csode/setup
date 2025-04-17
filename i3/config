@@ -170,14 +170,17 @@ for_window [class="Thunar"] move to workspace $ws6
 
 bindsym $mod+Shift+g workspace $ws8; exec gimp
 bindsym $mod+Shift+y workspace $ws10; exec pavucontrol
-bindsym $mod+b workspace $ws3; exec brave-browser 
+bindsym $mod+b workspace $ws3; exec brave-browser
+bindsym $mod+Shift+b workspace $ws2; exec firefox
 bindsym $mod+t workspace $ws6; exec flatpak run org.kde.kdenlive 
-bindsym $mod+Shift+f workspace $ws6; exec thunar 
+bindsym $mod+Shift+f workspace $ws6; exec thunar
+bindsym $mod+Shift+t ; exec alacritty
 bindsym $mod+Return workspace $ws1; exec kitty
 bindsym $mod+bracketleft workspace prev
-bindsym $mod+Tab workspace prev
+bindsym $mod+Tab focus next
+bindsym $mod+Shift+Tab focus prev
 bindsym $mod+bracketright workspace next
-bindsym $mod+Shift+s exec scrot ~/Pictures/screenshot.png
+bindsym $mod+Shift+s exec scrot ~/Pictures/Screenshots/screenshot.png
 bindsym $mod+o workspace $ws5 exec obs
 bindsym $mod+Shift+o workspace $ws9 exec virt-manager
 bindsym $mod+c workspace $ws2 exec emacs
