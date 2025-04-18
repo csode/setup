@@ -11,8 +11,8 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-require('keymap')
-require('set')
+require("keymap")
+require("set")
 require("lazy").setup("plugins")
 
 math.randomseed(os.time())
