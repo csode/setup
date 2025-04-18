@@ -9,9 +9,8 @@ vim.keymap.set("n", "<c-l>", ":wincmd l<CR>")
 
 -- Basic operations
 vim.keymap.set("n", "<leader>h", ":nohlsearch<CR>")
-vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 vim.keymap.set("n", "<leader>w", ":w!<CR>")
-vim.keymap.set("n", "<Leader>q", "<cmd>q!<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<Leader>q", "<cmd>wq!<CR>", { noremap = true, silent = true })
 
 -- Reload configuration
 vim.api.nvim_set_keymap(
@@ -37,7 +36,6 @@ vim.keymap.set("n", "N", "Nzzzv")
 -- Special features
 vim.keymap.set("n", "|", "<cmd>Speedtyper<CR>")
 vim.keymap.set("n", "<leader>zig", "<cmd>LspRestart<cr>")
-vim.keymap.set("n", "Ff", vim.lsp.buf.format)
 
 -- Vim-with-me integration
 vim.keymap.set("n", "<leader>vwm", function()
@@ -84,7 +82,12 @@ function increment_number_in_line()
 	vim.api.nvim_set_current_line(updated_line)
 end
 
-vim.api.nvim_set_keymap("n", "<leader><leader>;", ":lua increment_number_in_line()<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap(
+	"n",
+	"<leader><leader>;",
+	":lua increment_number_in_line()<CR>",
+	{ noremap = true, silent = true }
+)
 
 -- Cheatsheet mapping
 vim.keymap.set(
@@ -107,17 +110,17 @@ vim.keymap.set("n", "<leader>?", function()
 end, { desc = "Show all keybindings" })
 
 vim.api.nvim_set_keymap("n", "<leader>lp", ":w<CR>:!pdflatex %:r.tex<CR>", { noremap = true, silent = true })
-vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv", { noremap = true, silent = true })
-vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv", { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', 'gb', ':e #<CR>', { noremap = true, silent = true })
+vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { noremap = true, silent = true })
+vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "gb", ":e #<CR>", { noremap = true, silent = true })
 -- Map <Leader>w to set textwidth and wrap for markdown files
 vim.api.nvim_create_autocmd("FileType", {
-    pattern = "markdown",
-    callback = function()
-        vim.keymap.set('n', '<Leader><leader>w', ':setlocal textwidth=100 wrap<CR>')
-    end,
+	pattern = "markdown",
+	callback = function()
+		vim.keymap.set("n", "<Leader><leader>w", ":setlocal textwidth=100 wrap<CR>")
+	end,
 })
 vim.api.nvim_create_autocmd("BufWritePre", {
-    pattern = "*.md",
-    command = "silent! :setlocal textwidth=100 wrap"
+	pattern = "*.md",
+	command = "silent! :setlocal textwidth=100 wrap",
 })

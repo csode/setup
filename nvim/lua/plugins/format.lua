@@ -7,9 +7,10 @@ return {
 
         vim.api.nvim_create_autocmd('BufWritePre', {
             group = vim.api.nvim_create_augroup('LspAutoFormat', { clear = true }),
-            pattern = '*', -- This applies to all filetypes
+            pattern = '*', -- Applies to all filetypes
             callback = function()
-                if vim.lsp.buf_get_clients() ~= {} then
+                local clients = vim.lsp.get_clients({ bufnr = vim.api.nvim_get_current_buf() })
+                if next(clients) ~= nil then
                     vim.lsp.buf.format({ async = true })
                 else
                     print("No active LSP client, skipping format!")
@@ -18,3 +19,4 @@ return {
         })
     end
 }
+
