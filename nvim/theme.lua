@@ -1,1 +1,0 @@
-return "rose-pine"

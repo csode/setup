@@ -33,7 +33,6 @@ vim.opt.signcolumn = "yes"
 vim.opt.isfname:append("@-@")
 vim.opt.updatetime = 50
 vim.opt.colorcolumn = ""
-vim.opt.shortmess:append("I") -- This disables the intro message
 
 vim.opt.showmode = false
 vim.opt.showcmd = false
@@ -42,26 +41,26 @@ vim.o.cursorline = true
 
 -- Instead of vim.diagnostic.disable()
 vim.diagnostic.config({
-	virtual_text = false,
-	signs = false,
-	underline = false,
-	update_in_insert = false,
-	severity_sort = false,
+    virtual_text = false,
+    signs = false,
+    underline = false,
+    update_in_insert = false,
+    severity_sort = false,
 })
 
 -- Autocommand for LSP attach to bind LSP key mappings
 vim.api.nvim_create_autocmd("LspAttach", {
-	callback = function(e)
-		local opts = { buffer = e.buf }
-		vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-		vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-		vim.keymap.set("n", "<leader>vws", vim.lsp.buf.workspace_symbol, opts)
-		vim.keymap.set("n", "<leader>vd", vim.diagnostic.open_float, opts)
-		vim.keymap.set("n", "<leader>vca", vim.lsp.buf.code_action, opts)
-		vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
-		vim.keymap.set("n", "<leader>vrn", vim.lsp.buf.rename, opts)
-		vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
-		vim.keymap.set("n", "[d", vim.diagnostic.goto_next, opts)
-		vim.keymap.set("n", "]d", vim.diagnostic.goto_prev, opts)
-	end,
+    callback = function(e)
+        local opts = { buffer = e.buf }
+        vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+        vim.keymap.set("n", "<leader>vws", vim.lsp.buf.workspace_symbol, opts)
+        vim.keymap.set("n", "<leader>vd", vim.diagnostic.open_float, opts)
+        vim.keymap.set("n", "<leader>vca", vim.lsp.buf.code_action, opts)
+        vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
+        vim.keymap.set("n", "<leader>vrn", vim.lsp.buf.rename, opts)
+        vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
+        vim.keymap.set("n", "[d", vim.diagnostic.goto_next, opts)
+        vim.keymap.set("n", "]d", vim.diagnostic.goto_prev, opts)
+    end,
 })

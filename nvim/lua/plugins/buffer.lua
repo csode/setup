@@ -1,11 +1,19 @@
 return {
-	"xsoder/buffer-manager",
-	dependencies = {
-		"ibhagwan/fzf-lua",
-		"nvim-tree/nvim-web-devicons",
-		"nvim-lua/plenary.nvim",
-	},
-	config = function()
-		require("buffer-manager").setup()
-	end,
+    {
+        dir = "~/Programming/buffer-manager.nvim",
+        name = "buffer-manager.nvim",
+        dependencies = {
+            "nvim-tree/nvim-web-devicons",
+            "nvim-telescope/telescope.nvim",
+        },
+        config = function()
+            require("buffer-manager").setup({
+                auto_load_session = false,
+                window = {
+                    width = 0.6, -- Your preferred default size
+                    height = 0.5,
+                },
+            })
+        end,
+    },
 }
