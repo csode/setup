@@ -307,6 +307,8 @@ install_configs() {
     # i3
     install_file "$REPO_DIR/i3" "$CONFIG_DIR/i3"
 
+    # ghostty
+    install_file "$REPO_DIR/ghostty" "$CONFIG_DIR/ghostty"
     # zsh (if exists)
     if [ -f "$REPO_DIR/.zshrc" ]; then
         install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"

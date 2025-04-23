@@ -37,7 +37,7 @@ vim.opt.colorcolumn = ""
 vim.opt.showmode = false
 vim.opt.showcmd = false
 
-vim.o.cursorline = true
+vim.o.cursorline = false
 
 -- Instead of vim.diagnostic.disable()
 vim.diagnostic.config({
@@ -64,3 +64,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
         vim.keymap.set("n", "]d", vim.diagnostic.goto_prev, opts)
     end,
 })
+
+vim.keymap.set("n", "<leader>sl", function()
+    require("buffer-manager.session").load_session()
+end, { desc = "BufferManager: Restore session" })
