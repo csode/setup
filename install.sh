@@ -6,10 +6,10 @@
 set -e
 
 # ┌─────────────────────────────────┐
-# │ COLOR AND FORMATTING DEFINITIONS │
+# │ COLOR AND FORMATTING            │
 # └─────────────────────────────────┘
-RESET='\033[0m' 
-BOLD='\033[1m' 
+RESET='\033[0m'
+BOLD='\033[1m'
 ITALIC='\033[3m'
 UNDERLINE='\033[4m'
 
@@ -30,667 +30,748 @@ BUILD_DIR="$HOME/build"
 INSTALL_METHOD=""
 DISTRO=""
 PACKAGE_MANAGER=""
+TERMINAL_EMULATOR=""
 
 # ┌─────────────────────┐
 # │ LOGGING AND DISPLAY │
 # └─────────────────────┘
 print_banner() {
-    echo -e "${BOLD}${CYAN}"
-    echo "╔══════════════════════════════════════════════════════════╗"
-    echo "║                                                          ║"
-    echo "║                 DOTFILES INSTALLER                       ║"
-    echo "║                                                          ║"
-    echo "╚══════════════════════════════════════════════════════════╝"
-    echo -e "${RESET}"
+  echo -e "${BOLD}${CYAN}"
+  echo "╔══════════════════════════════════════════════════════════╗"
+  echo "║                                                          ║"
+  echo "║                         DOTFILES INSTALLER               ║"
+  echo "║                                                          ║"
+  echo "╚══════════════════════════════════════════════════════════╝"
+  echo -e "${RESET}"
 }
 
 print_section() {
-    echo
-    local padding=$(printf '%*s' $(( 50 - ${#1} )) | tr ' ' '─')
-    echo -e "${BOLD}${MAGENTA}┌─ $1 ${padding}┐${RESET}"
-    echo
+  echo
+  local padding=$(printf '%*s' $(( 50 - ${#1} )) | tr ' ' '─')
+  echo -e "${BOLD}${MAGENTA}┌─ $1 ${padding}┐${RESET}"
+  echo
 }
 
 log() {
-    echo -e "${BOLD}${BLUE}INFO:${RESET} $1"
+  echo -e "${BOLD}${BLUE}INFO:${RESET} $1"
 }
 
 success() {
-    echo -e "${BOLD}${GREEN}SUCCESS:${RESET} $1"
+  echo -e "${BOLD}${GREEN}SUCCESS:${RESET} $1"
 }
 
 warning() {
-    echo -e "${BOLD}${YELLOW}WARNING:${RESET} $1"
+  echo -e "${BOLD}${YELLOW}WARNING:${RESET} $1"
 }
 
 error() {
-    echo -e "${BOLD}${RED}ERROR:${RESET} $1"
-    exit 1
+  echo -e "${BOLD}${RED}ERROR:${RESET} $1"
+  exit 1
 }
 
 # ┌─────────────────────┐
-# │ UTILITY FUNCTIONS   │
+# │ UTILITY FUNCTIONS  │
 # └─────────────────────┘
 detect_distro() {
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        DISTRO=$ID
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    DISTRO=$ID
 
-        # Detect package manager
-        if command -v apt >/dev/null 2>&1; then
-            PACKAGE_MANAGER="apt"
-        elif command -v dnf >/dev/null 2>&1; then
-            PACKAGE_MANAGER="dnf"
-        elif command -v pacman >/dev/null 2>&1; then
-            PACKAGE_MANAGER="pacman"
-        elif command -v zypper >/dev/null 2>&1; then
-            PACKAGE_MANAGER="zypper"
-        else
-            warning "Could not detect package manager"
-        fi
-
-        log "Detected distribution: ${CYAN}$DISTRO${RESET} (Package manager: ${CYAN}$PACKAGE_MANAGER${RESET})"
+    # Detect package manager
+    if command -v apt >/dev/null 2>&1; then
+      PACKAGE_MANAGER="apt"
+    elif command -v dnf >/dev/null 2>&1; then
+      PACKAGE_MANAGER="dnf"
+    elif command -v pacman >/dev/null 2>&1; then
+      PACKAGE_MANAGER="pacman"
+    elif command -v zypper >/dev/null 2>&1; then
+      PACKAGE_MANAGER="zypper"
     else
-        warning "Could not detect Linux distribution. Some features may not work properly."
+      warning "Could not detect package manager"
     fi
+
+    log "Detected distribution: ${CYAN}$DISTRO${RESET} (Package manager: ${CYAN}$PACKAGE_MANAGER${RESET})"
+  else
+    warning "Could not detect Linux distribution. Some features may not work properly."
+  fi
 }
 
 backup_file() {
-    local file=$1
-    local backup_path="$BACKUP_DIR/$(basename "$file")"
+  local file=$1
+  local backup_path="$BACKUP_DIR/$(basename "$file")"
 
-    if [ -e "$file" ]; then
-        mkdir -p "$BACKUP_DIR"
-        
-        if [ -d "$file" ]; then
-            log "Backing up directory: ${MAGENTA}$file${RESET} → ${CYAN}$backup_path${RESET}"
-            cp -R "$file" "$backup_path"
-        else
-            log "Backing up file: ${MAGENTA}$file${RESET} → ${CYAN}$backup_path${RESET}"
-            cp "$file" "$backup_path"
-        fi
+  if [ -e "$file" ]; then
+    mkdir -p "$BACKUP_DIR"
+    
+    if [ -d "$file" ]; then
+      log "Backing up directory: ${MAGENTA}$file${RESET} → ${CYAN}$backup_path${RESET}"
+      cp -R "$file" "$backup_path"
+    else
+      log "Backing up file: ${MAGENTA}$file${RESET} → ${CYAN}$backup_path${RESET}"
+      cp "$file" "$backup_path"
     fi
+  fi
 }
 
 remove_symlink() {
-    local target=$1
-    if [ -L "$target" ]; then
-        log "Removing existing symlink: ${MAGENTA}$target${RESET}"
-        rm "$target"
-    fi
+  local target=$1
+  if [ -L "$target" ]; then
+    log "Removing existing symlink: ${MAGENTA}$target${RESET}"
+    rm "$target"
+  fi
 }
 
 verify_repo() {
-    if [ ! -f "$REPO_DIR/install.sh" ]; then
-        warning "This script should be run from inside your dotfiles repository."
-        read -p "Continue anyway? [y/N] " -n 1 -r CONTINUE
-        echo
-        if [[ ! $CONTINUE =~ ^[Yy]$ ]]; then
-            error "Installation aborted."
-        fi
+  if [ ! -f "$REPO_DIR/install.sh" ]; then
+    warning "This script should be run from inside your dotfiles repository."
+    read -p "Continue anyway? [y/N] " -n 1 -r CONTINUE
+    echo
+    if [[ ! $CONTINUE =~ ^[Yy]$ ]]; then
+      error "Installation aborted."
     fi
-    
-    log "Installing dotfiles from: ${CYAN}$REPO_DIR${RESET}"
+  fi
+  
+  log "Installing dotfiles from: ${CYAN}$REPO_DIR${RESET}"
 }
 
 ask_install_method() {
-    echo -e "${BOLD}${MAGENTA}Please choose how you want to install the dotfiles:${RESET}"
-    echo -e "  ${BOLD}1)${RESET} ${CYAN}Create symbolic links${RESET} (recommended, easier to update)"
-    echo -e "  ${BOLD}2)${RESET} ${CYAN}Copy files${RESET} (works better in some environments)"
-    
-    while [ -z "$INSTALL_METHOD" ]; do
-        read -p "Enter your choice [1/2]: " choice
-        case $choice in
-            1)
-                INSTALL_METHOD="symlink"
-                ;;
-            2)
-                INSTALL_METHOD="copy"
-                ;;
-            *)
-                warning "Invalid choice. Please enter ${BOLD}1${RESET} or ${BOLD}2${RESET}."
-                ;;
-        esac
-    done
-    
-    log "Selected installation method: ${BOLD}${MAGENTA}${INSTALL_METHOD}${RESET}"
+  echo -e "${BOLD}${MAGENTA}Please choose how you want to install the dotfiles:${RESET}"
+  echo -e "  ${BOLD}1)${RESET} ${CYAN}Create symbolic links${RESET} (recommended, easier to update)"
+  echo -e "  ${BOLD}2)${RESET} ${CYAN}Copy files${RESET} (works better in some environments)"
+  
+  while [ -z "$INSTALL_METHOD" ]; do
+    read -p "Enter your choice [1/2]: " choice
+    case $choice in
+      1)
+        INSTALL_METHOD="symlink"
+        ;;
+      2)
+        INSTALL_METHOD="copy"
+        ;;
+      *)
+        warning "Invalid choice. Please enter ${BOLD}1${RESET} or ${BOLD}2${RESET}."
+        ;;
+    esac
+  done
+  
+  log "Selected installation method: ${BOLD}${MAGENTA}${INSTALL_METHOD}${RESET}"
+}
+
+ask_terminal_emulator() {
+  echo -e "${BOLD}${MAGENTA}Please choose your preferred terminal emulator:${RESET}"
+  echo -e "  ${BOLD}1)${RESET} ${CYAN}Kitty${RESET} (widely available, easy to install)"
+  echo -e "  ${BOLD}2)${RESET} ${CYAN}Ghostty${RESET} (modern alternative, requires extra setup on some systems)"
+  
+  while [ -z "$TERMINAL_EMULATOR" ]; do
+    read -p "Enter your choice [1/2]: " choice
+    case $choice in
+      1)
+        TERMINAL_EMULATOR="kitty"
+        ;;
+      2)
+        TERMINAL_EMULATOR="ghostty"
+        ;;
+      *)
+        warning "Invalid choice. Please enter ${BOLD}1${RESET} or ${BOLD}2${RESET}."
+        ;;
+    esac
+  done
+  
+  log "Selected terminal emulator: ${BOLD}${MAGENTA}${TERMINAL_EMULATOR}${RESET}"
 }
 
 ask_yes_no() {
-    local prompt=$1
-    local default=${2:-n}
-    
-    local yn_prompt="[y/N]"
-    if [ "$default" = "y" ]; then
-        yn_prompt="[Y/n]"
-    fi
-    
-    read -p "$prompt $yn_prompt " -n 1 -r REPLY
-    echo
-    
-    if [ -z "$REPLY" ]; then
-        REPLY=$default
-    fi
-    
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        return 0
-    else
-        return 1
-    fi
+  local prompt=$1
+  local default=${2:-n}
+  
+  local yn_prompt="[y/N]"
+  if [ "$default" = "y" ]; then
+    yn_prompt="[Y/n]"
+  fi
+  
+  read -p "$prompt $yn_prompt " -n 1 -r REPLY
+  echo
+  
+  if [ -z "$REPLY" ]; then
+    REPLY=$default
+  fi
+  
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 install_packages() {
-    print_section "SYSTEM DEPENDENCIES"
-    
-    log "Installing required system packages..."
-    
-    case "$PACKAGE_MANAGER" in
-        apt)
-            # Updated packages for Pop!_OS and Ubuntu-based systems
-            sudo apt update
-            
-            # Try to install packages with error handling
-            for pkg in build-essential git pkg-config libx11-dev libxft-dev \
-                libxinerama-dev dconf-cli wget curl unzip ninja-build gettext \
-                libtool libtool-bin autoconf automake cmake g++ pkg-config \
-                i3 ibus kitty neofetch emacs virt-manager libvirt-daemon-system \
-                qemu-system-x86 virtinst bridge-utils virt-viewer spice-client-gtk \
-                openssl libssl-dev libuv1-dev libluajit-5.1-dev \
-                libunibilium-dev libmsgpack-dev libtermkey-dev libvterm-dev \
-                lua5.1 lua-lpeg lua-mpack lua-bitop; do
-                
-                log "Installing $pkg..."
-                if ! sudo apt install -y $pkg; then
-                    warning "Failed to install $pkg. Continuing with installation..."
-                fi
-            done
-            ;;
-        dnf)
-            # Fixed package names for Fedora
-            sudo dnf install -y @development-tools git cmake ninja-build pkg-config \
-                libX11-devel libXft-devel libXinerama-devel dconf wget curl unzip \
-                gettext-devel libtool autoconf automake gcc-c++ \
-                i3 ibus kitty neofetch-bash emacs virt-manager libvirt \
-                qemu-kvm virt-install bridge-utils qemu virt-viewer spice-gtk3 \
-                openssl openssl-devel libuv-devel luajit-devel \
-                unibilium-devel msgpack-devel libtermkey-devel libvterm-devel \
-                lua5.1 lua-lpeg lua-mpack lua-bitop
-            ;;
-        pacman)
-            sudo pacman -Syu --noconfirm base-devel git cmake ninja \
-                libx11 libxft libxinerama dconf i3 ibus kitty neofetch \
-                polybar emacs qemu libvirt virt-manager virt-viewer spice-gtk \
-                ebtables dnsmasq bridge-utils openbsd-netcat \
-                openssl libuv luajit unibilium msgpack-c libtermkey libvterm \
-                lua51 lua51-lpeg lua51-mpack lua51-bitop
-            ;;
-        zypper)
-            sudo zypper install -y git cmake ninja dconf-tools \
-                libX11-devel libXft-devel libXinerama-devel \
-                i3 kitty neofetch emacs-nox virt-manager libvirt qemu-kvm \
-                virt-viewer spice-gtk \
-                openssl libopenssl-devel libuv-devel luajit-devel \
-                libunibilium-devel libmsgpack-devel libtermkey-devel libvterm-devel \
-                lua51 lua51-lpeg lua51-mpack lua51-bitop
-            ;;
-        *)
-            warning "Unsupported package manager. You may need to install dependencies manually."
-            if ask_yes_no "Would you like to continue without installing dependencies?"; then
-                return 0
-            else
-                error "Installation aborted."
-            fi
-            ;;
-    esac
-    
-    # Enable and start libvirtd service
-    if command -v systemctl >/dev/null 2>&1; then
-        log "Enabling and starting libvirtd service..."
-        sudo systemctl enable libvirtd
-        sudo systemctl start libvirtd
+  print_section "SYSTEM DEPENDENCIES"
+  
+  log "Installing required system packages..."
+  
+  case "$PACKAGE_MANAGER" in
+    apt)
+      sudo apt update
+      for pkg in build-essential git pkg-config libx11-dev libxft-dev \
+          libxinerama-dev dconf-cli wget curl unzip ninja-build gettext \
+          libtool libtool-bin autoconf automake cmake g++ pkg-config \
+          i3 ibus neofetch emacs virt-manager libvirt-daemon-system \
+          qemu-system-x86 virtinst bridge-utils virt-viewer spice-client-gtk \
+          openssl libssl-dev libuv1-dev libluajit-5.1-dev \
+          tmux libunibilium-dev libmsgpack-dev libtermkey-dev libvterm-dev \
+          lua5.1 lua-lpeg lua-mpack lua-bitop; do
         
-        # Add current user to libvirt group
-        if getent group libvirt >/dev/null; then
-            log "Adding user to libvirt group..."
-            sudo usermod -aG libvirt $USER
+        log "Installing $pkg..."
+        if ! sudo apt install -y $pkg; then
+          warning "Failed to install $pkg. Continuing with installation..."
         fi
-    fi
+      done
+      ;;
+    dnf)
+      # Fixed package names for Fedora
+      sudo dnf install -y @development-tools git cmake ninja-build pkg-config \
+          libX11-devel libXft-devel libXinerama-devel dconf wget curl unzip \
+          gettext-devel libtool autoconf automake gcc-c++ \
+          i3 ibus neofetch-bash emacs virt-manager libvirt \
+          qemu-kvm virt-install bridge-utils qemu virt-viewer spice-gtk3 \
+          openssl openssl-devel libuv-devel luajit-devel \
+          unibilium-devel msgpack-devel libtermkey-devel libvterm-devel \
+          lua5.1 lua-lpeg lua-mpack lua-bitop tmux
+      ;;
+    pacman)
+      sudo pacman -Syu --noconfirm base-devel git cmake ninja \
+          libx11 libxft libxinerama dconf i3 ibus neofetch \
+          polybar emacs qemu libvirt virt-manager virt-viewer spice-gtk \
+          ebtables dnsmasq bridge-utils openbsd-netcat \
+          openssl libuv luajit unibilium msgpack-c libtermkey libvterm \
+          lua51 lua51-lpeg lua51-mpack lua51-bitop tmux
+      ;;
+    zypper)
+      sudo zypper install -y git cmake ninja dconf-tools \
+          libX11-devel libXft-devel libXinerama-devel \
+          i3 neofetch emacs-nox virt-manager libvirt qemu-kvm \
+          virt-viewer spice-gtk \
+          openssl libopenssl-devel libuv-devel luajit-devel \
+          libunibilium-devel libmsgpack-devel libtermkey-devel libvterm-devel \
+          lua51 lua51-lpeg lua51-mpack lua51-bitop tmux
+      ;;
+    *)
+      warning "Unsupported package manager. You may need to install dependencies manually."
+      if ask_yes_no "Would you like to continue without installing dependencies?"; then
+        return 0
+      else
+        error "Installation aborted."
+      fi
+      ;;
+  esac
+  
+  # Install chosen terminal emulator
+  install_terminal_emulator
+  
+  # Enable and start libvirtd service
+  if command -v systemctl >/dev/null 2>&1; then
+    log "Enabling and starting libvirtd service..."
+    sudo systemctl enable libvirtd
+    sudo systemctl start libvirtd
     
-    success "System packages installed successfully!"
+    # Add current user to libvirt group
+    if getent group libvirt >/dev/null; then
+      log "Adding user to libvirt group..."
+      sudo usermod -aG libvirt $USER
+    fi
+  fi
+  
+  success "System packages installed successfully!"
+}
+
+install_terminal_emulator() {
+  print_section "TERMINAL EMULATOR INSTALLATION"
+  
+  log "Installing ${CYAN}$TERMINAL_EMULATOR${RESET} terminal emulator..."
+  
+  case "$TERMINAL_EMULATOR" in
+    kitty)
+      case "$PACKAGE_MANAGER" in
+        apt)
+          sudo apt install -y kitty
+          ;;
+        dnf)
+          sudo dnf install -y kitty
+          ;;
+        pacman)
+          sudo pacman -S --noconfirm kitty
+          ;;
+        zypper)
+          sudo zypper install -y kitty
+          ;;
+        *)
+          warning "Unsupported package manager. You may need to install kitty manually."
+          ;;
+      esac
+      ;;
+    ghostty)
+      case "$PACKAGE_MANAGER" in
+        apt)
+          log "Setting up Ghostty repository for Debian-based systems..."
+          echo 'deb http://download.opensuse.org/repositories/home:/clayrisser:/bookworm/Debian_12/ /' | sudo tee /etc/apt/sources.list.d/home:clayrisser:bookworm.list
+          curl -fsSL https://download.opensuse.org/repositories/home:clayrisser:bookworm/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_clayrisser_bookworm.gpg > /dev/null
+          sudo apt update
+          sudo apt install -y ghostty
+          ;;
+        dnf)
+          warning "Ghostty may not be available in standard Fedora repositories."
+          log "Please check https://github.com/mitchellh/ghostty for installation instructions."
+          ;;
+        pacman)
+          sudo pacman -S --noconfirm ghostty
+          ;;
+        zypper)
+          warning "Ghostty may not be available in standard openSUSE repositories."
+          log "Please check https://github.com/mitchellh/ghostty for installation instructions."
+          ;;
+        *)
+          warning "Unsupported package manager. You may need to install ghostty manually."
+          ;;
+      esac
+      ;;
+  esac
+  
+  success "$TERMINAL_EMULATOR installation complete!"
 }
 
 # ┌──────────────────────────┐
-# │ DOTFILES INSTALLATION    │
+# │ DOTFILES INSTALLATION  │
 # └──────────────────────────┘
 install_file() {
-    local src=$1
-    local dest=$2
-    
-    mkdir -p "$(dirname "$dest")"
+  local src=$1
+  local dest=$2
+  
+  mkdir -p "$(dirname "$dest")"
 
-    if [ -e "$dest" ] || [ -L "$dest" ]; then
-        backup_file "$dest"
-        log "Removing existing file: ${MAGENTA}$dest${RESET}"
-        rm -rf "$dest"
-    fi
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    backup_file "$dest"
+    log "Removing existing file: ${MAGENTA}$dest${RESET}"
+    rm -rf "$dest"
+  fi
 
-    # Install the new file
-    if [ "$INSTALL_METHOD" = "symlink" ]; then
-        log "Creating symlink: ${MAGENTA}$dest${RESET} → ${CYAN}$src${RESET}"
-        ln -sf "$src" "$dest"
-    else
-        log "Copying file: ${MAGENTA}$src${RESET} → ${CYAN}$dest${RESET}"
-        cp -R "$src" "$dest"
-    fi
+  # Install the new file
+  if [ "$INSTALL_METHOD" = "symlink" ]; then
+    log "Creating symlink: ${MAGENTA}$dest${RESET} → ${CYAN}$src${RESET}"
+    ln -sf "$src" "$dest"
+  else
+    log "Copying file: ${MAGENTA}$src${RESET} → ${CYAN}$dest${RESET}"
+    cp -R "$src" "$dest"
+  fi
 }
 
 install_configs() {
-    print_section "CONFIGURATION FILES"
-    
-    log "Installing configuration files..."
-    
-    mkdir -p "$CONFIG_DIR"
-    
-    # vim
-    install_file "$REPO_DIR/.vimrc" "$HOME/.vimrc"
-    install_file "$REPO_DIR/.vim" "$HOME/.vim"
-    
-    # neovim
-    install_file "$REPO_DIR/nvim" "$CONFIG_DIR/nvim"
-    
-    # tmux
-    install_file "$REPO_DIR/.tmux.conf" "$HOME/.tmux.conf"
-    
-    # kitty
-    install_file "$REPO_DIR/kitty" "$CONFIG_DIR/kitty"
+  print_section "CONFIGURATION FILES"
+  
+  log "Installing configuration files..."
+  
+  mkdir -p "$CONFIG_DIR"
+  
+  # vim
+  install_file "$REPO_DIR/.vimrc" "$HOME/.vimrc"
+  install_file "$REPO_DIR/.vim" "$HOME/.vim"
+  
+  # neovim
+  install_file "$REPO_DIR/nvim" "$CONFIG_DIR/nvim"
+  
+  # tmux
+  install_file "$REPO_DIR/.tmux.conf" "$HOME/.tmux.conf"
+  
+  # Install terminal emulator config
+  case "$TERMINAL_EMULATOR" in
+    kitty)
+      install_file "$REPO_DIR/kitty" "$CONFIG_DIR/kitty"
+      ;;
+    ghostty)
+      install_file "$REPO_DIR/ghostty" "$CONFIG_DIR/ghostty"
+      ;;
+  esac
 
-    # i3
-    install_file "$REPO_DIR/i3" "$CONFIG_DIR/i3"
+  # i3
+  install_file "$REPO_DIR/i3" "$CONFIG_DIR/i3"
 
-    # ghostty
-    install_file "$REPO_DIR/ghostty" "$CONFIG_DIR/ghostty"
-    # zsh (if exists)
-    if [ -f "$REPO_DIR/.zshrc" ]; then
-        install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
-    fi
+  # zsh (if exists)
+  if [ -f "$REPO_DIR/.zshrc" ]; then
+    install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
+  fi
 
-    # picom (always copy)
-    if [ -f "$REPO_DIR/picom.conf" ]; then
-        log "Copying picom.conf: ${MAGENTA}$REPO_DIR/picom.conf${RESET} → ${CYAN}$CONFIG_DIR/picom.conf${RESET}"
-        cp "$REPO_DIR/picom.conf" "$CONFIG_DIR/picom.conf"
-    fi
+  # picom (always copy)
+  if [ -f "$REPO_DIR/picom.conf" ]; then
+    log "Copying picom.conf: ${MAGENTA}$REPO_DIR/picom.conf${RESET} → ${CYAN}$CONFIG_DIR/picom.conf${RESET}"
+    cp "$REPO_DIR/picom.conf" "$CONFIG_DIR/picom.conf"
+  fi
 
-    log "Checking for additional configurations..."
-    
-    if [ -d "$REPO_DIR/config" ]; then
-        for config_dir in "$REPO_DIR/config"/*; do
-            if [ -d "$config_dir" ]; then
-                config_name=$(basename "$config_dir")
-                install_file "$config_dir" "$CONFIG_DIR/$config_name"
-            fi
-        done
-    fi
-    
-    success "Configuration files installed successfully!"
+  log "Checking for additional configurations..."
+  
+  if [ -d "$REPO_DIR/config" ]; then
+    for config_dir in "$REPO_DIR/config"/*; do
+      if [ -d "$config_dir" ]; then
+        config_name=$(basename "$config_dir")
+        install_file "$config_dir" "$CONFIG_DIR/$config_name"
+      fi
+    done
+  fi
+  
+  success "Configuration files installed successfully!"
 }
 
 install_optional_components() {
-    print_section "OPTIONAL COMPONENTS"
-    
-    log "Checking for optional components..."
-    
-    if [ -d "$REPO_DIR/fonts" ]; then
-        if ask_yes_no "Do you want to install custom fonts?"; then
-            mkdir -p "$HOME/.local/share/fonts"
-            log "Installing fonts to ${CYAN}~/.local/share/fonts${RESET}"
-            cp -r "$REPO_DIR/fonts/"* "$HOME/.local/share/fonts/"
-            log "Refreshing font cache..."
-            if command -v fc-cache >/dev/null 2>&1; then
-                fc-cache -f
-            else
-                warning "fc-cache not found. You may need to refresh your font cache manually."
-            fi
-        fi
+  print_section "OPTIONAL COMPONENTS"
+  
+  log "Checking for optional components..."
+  
+  if [ -d "$REPO_DIR/fonts" ]; then
+    if ask_yes_no "Do you want to install custom fonts?"; then
+      mkdir -p "$HOME/.local/share/fonts"
+      log "Installing fonts to ${CYAN}~/.local/share/fonts${RESET}"
+      cp -r "$REPO_DIR/fonts/"* "$HOME/.local/share/fonts/"
+      log "Refreshing font cache..."
+      if command -v fc-cache >/dev/null 2>&1; then
+        fc-cache -f
+      else
+        warning "fc-cache not found. You may need to refresh your font cache manually."
+      fi
     fi
+  fi
 }
 
 # ┌──────────────────────────┐
-# │ FLATPAK INSTALLATION     │
+# │ FLATPAK INSTALLATION   │
 # └──────────────────────────┘
 install_flatpak() {
-    print_section "FLATPAK SETUP"
-    
-    log "Checking for Flatpak..."
-    
-    if ! command -v flatpak >/dev/null 2>&1; then
-        if ask_yes_no "Flatpak is not installed. Do you want to install it?"; then
-            log "Installing Flatpak using $PACKAGE_MANAGER..."
-            case "$PACKAGE_MANAGER" in
-                apt)
-                    sudo apt update && sudo apt install -y flatpak gnome-software-plugin-flatpak
-                    ;;
-                dnf)
-                    sudo dnf install -y flatpak
-                    ;;
-                pacman)
-                    sudo pacman -S --noconfirm flatpak
-                    ;;
-                zypper)
-                    sudo zypper install -y flatpak
-                    ;;
-                *)
-                    warning "Couldn't identify package manager. Please install Flatpak manually."
-                    return 1
-                    ;;
-            esac
-        else
-            return 0
-        fi
+  print_section "FLATPAK SETUP"
+  
+  log "Checking for Flatpak..."
+  
+  if ! command -v flatpak >/dev/null 2>&1; then
+    if ask_yes_no "Flatpak is not installed. Do you want to install it?"; then
+      log "Installing Flatpak using $PACKAGE_MANAGER..."
+      case "$PACKAGE_MANAGER" in
+        apt)
+          sudo apt update && sudo apt install -y flatpak gnome-software-plugin-flatpak
+          ;;
+        dnf)
+          sudo dnf install -y flatpak
+          ;;
+        pacman)
+          sudo pacman -S --noconfirm flatpak
+          ;;
+        zypper)
+          sudo zypper install -y flatpak
+          ;;
+        *)
+          warning "Couldn't identify package manager. Please install Flatpak manually."
+          return 1
+          ;;
+      esac
     else
-        log "Flatpak is already installed."
+      return 0
     fi
+  else
+    log "Flatpak is already installed."
+  fi
+  
+  # Add Flathub repository
+  if ask_yes_no "Do you want to add the Flathub repository?"; then
+    log "Adding Flathub repository..."
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    success "Flathub repository added successfully!"
     
-    # Add Flathub repository
-    if ask_yes_no "Do you want to add the Flathub repository?"; then
-        log "Adding Flathub repository..."
-        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        success "Flathub repository added successfully!"
-        
-        # Install Brave browser
-        if ask_yes_no "Do you want to install Brave browser from Flatpak?"; then
-            log "Installing Brave browser..."
-            flatpak install flathub com.brave.Browser -y
-            success "Brave browser installed successfully!"
-        fi
+    # Install Brave browser
+    if ask_yes_no "Do you want to install Brave browser from Flatpak?"; then
+      log "Installing Brave browser..."
+      flatpak install flathub com.brave.Browser -y
+      success "Brave browser installed successfully!"
     fi
-    
-    return 0
+  fi
+  
+  return 0
 }
 
 # ┌──────────────────────────┐
-# │ ZSH SETUP                │
+# │ ZSH SETUP            │
 # └──────────────────────────┘
 setup_zsh() {
-    print_section "ZSH SETUP"
-    
-    log "Checking for ZSH..."
-    
-    if ! command -v zsh >/dev/null 2>&1; then
-        if ask_yes_no "ZSH is not installed. Do you want to install it?"; then
-            log "Installing ZSH using $PACKAGE_MANAGER..."
-            case "$PACKAGE_MANAGER" in
-                apt)
-                    sudo apt update && sudo apt install -y zsh
-                    ;;
-                dnf)
-                    sudo dnf install -y zsh
-                    ;;
-                pacman)
-                    sudo pacman -S --noconfirm zsh
-                    ;;
-                zypper)
-                    sudo zypper install -y zsh
-                    ;;
-                *)
-                    warning "Couldn't identify package manager. Please install ZSH manually."
-                    return 1
-                    ;;
-            esac
-        else
-            return 0
-        fi
+  print_section "ZSH SETUP"
+  
+  log "Checking for ZSH..."
+  
+  if ! command -v zsh >/dev/null 2>&1; then
+    if ask_yes_no "ZSH is not installed. Do you want to install it?"; then
+      log "Installing ZSH using $PACKAGE_MANAGER..."
+      case "$PACKAGE_MANAGER" in
+        apt)
+          sudo apt update && sudo apt install -y zsh
+          ;;
+        dnf)
+          sudo dnf install -y zsh
+          ;;
+        pacman)
+          sudo pacman -S --noconfirm zsh
+          ;;
+        zypper)
+          sudo zypper install -y zsh
+          ;;
+        *)
+          warning "Couldn't identify package manager. Please install ZSH manually."
+          return 1
+          ;;
+      esac
     else
-        log "ZSH is already installed."
+      return 0
+    fi
+  else
+    log "ZSH is already installed."
+  fi
+  
+  # Set ZSH as default shell
+  if ask_yes_no "Do you want to set ZSH as your default shell?"; then
+    log "Setting ZSH as default shell..."
+    chsh -s $(which zsh)
+    success "ZSH set as default shell! This will take effect on next login."
+  fi
+  
+  # Install Oh My ZSH
+  if ask_yes_no "Do you want to install Oh My ZSH?"; then
+    log "Installing Oh My ZSH..."
+    if [ -d "$HOME/.oh-my-zsh" ]; then
+      log "Oh My ZSH is already installed, backing up..."
+      backup_file "$HOME/.oh-my-zsh"
+      rm -rf "$HOME/.oh-my-zsh"
     fi
     
-    # Set ZSH as default shell
-    if ask_yes_no "Do you want to set ZSH as your default shell?"; then
-        log "Setting ZSH as default shell..."
-        chsh -s $(which zsh)
-        success "ZSH set as default shell! This will take effect on next login."
+    # Save current shell to variable for safe return
+    CURRENT_SHELL=$(ps -p $$ | awk 'NR==2 {print $4}')
+    
+    # Use curl or wget to install Oh My ZSH
+    if command -v curl >/dev/null 2>&1; then
+      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    elif command -v wget >/dev/null 2>&1; then
+      sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    else
+      warning "Neither curl nor wget is installed. Please install Oh My ZSH manually."
+      return 1
     fi
     
-    # Install Oh My ZSH
-    if ask_yes_no "Do you want to install Oh My ZSH?"; then
-        log "Installing Oh My ZSH..."
-        if [ -d "$HOME/.oh-my-zsh" ]; then
-            log "Oh My ZSH is already installed, backing up..."
-            backup_file "$HOME/.oh-my-zsh"
-            rm -rf "$HOME/.oh-my-zsh"
-        fi
-        
-        # Save current shell to variable for safe return
-        CURRENT_SHELL=$(ps -p $$ | awk 'NR==2 {print $4}')
-        
-        # Use curl or wget to install Oh My ZSH
-        if command -v curl >/dev/null 2>&1; then
-            sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-        elif command -v wget >/dev/null 2>&1; then
-            sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-        else
-            warning "Neither curl nor wget is installed. Please install Oh My ZSH manually."
-            return 1
-        fi
-        
-        success "Oh My ZSH installed successfully!"
-        
-        # If we had a custom .zshrc in our dotfiles, restore it over Oh My ZSH's default
-        if [ -f "$REPO_DIR/.zshrc" ]; then
-            log "Restoring custom .zshrc from dotfiles..."
-            install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
-        fi
-    fi
+    success "Oh My ZSH installed successfully!"
     
-    return 0
+    # If we had a custom .zshrc in our dotfiles, restore it over Oh My ZSH's default
+    if [ -f "$REPO_DIR/.zshrc" ]; then
+      log "Restoring custom .zshrc from dotfiles..."
+      install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
+    fi
+  fi
+  
+  return 0
 }
 
 # ┌──────────────────────────┐
-# │ DOOM EMACS INSTALLATION  │
+# │ DOOM EMACS INSTALLATION  │
 # └──────────────────────────┘
 install_doom_emacs() {
-    print_section "DOOM EMACS SETUP"
+  print_section "DOOM EMACS SETUP"
+  
+  if ! command -v emacs >/dev/null 2>&1; then
+    warning "Emacs is not installed. Please install Emacs first."
+    return 1
+  fi
+  
+  if ask_yes_no "Do you want to install Doom Emacs?"; then
+    log "Installing Doom Emacs..."
     
-    if ! command -v emacs >/dev/null 2>&1; then
-        warning "Emacs is not installed. Please install Emacs first."
-        return 1
+    # Backup existing config if it exists
+    if [ -d "$HOME/.emacs.d" ]; then
+      log "Backing up existing Emacs configuration..."
+      backup_file "$HOME/.emacs.d"
+      rm -rf "$HOME/.emacs.d"
     fi
     
-    if ask_yes_no "Do you want to install Doom Emacs?"; then
-        log "Installing Doom Emacs..."
-        
-        # Backup existing config if it exists
-        if [ -d "$HOME/.emacs.d" ]; then
-            log "Backing up existing Emacs configuration..."
-            backup_file "$HOME/.emacs.d"
-            rm -rf "$HOME/.emacs.d"
-        fi
-        
-        # Clone Doom Emacs
-        log "Cloning Doom Emacs repository..."
-        git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.emacs.d
-        
-        # Install Doom Emacs
-        log "Installing Doom Emacs..."
-        ~/.emacs.d/bin/doom install
-        
-        # Check if we have custom doom config in dotfiles
-        if [ -d "$REPO_DIR/.doom.d" ]; then
-            log "Found custom Doom configuration in dotfiles..."
-            install_file "$REPO_DIR/.doom.d" "$HOME/.doom.d"
-            
-            # Sync Doom Emacs with custom config
-            log "Syncing Doom Emacs with custom configuration..."
-            ~/.emacs.d/bin/doom sync
-        fi
-        
-        success "Doom Emacs installed successfully!"
-    else
-        log "Skipping Doom Emacs installation."
+    # Clone Doom Emacs
+    log "Cloning Doom Emacs repository..."
+    git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.emacs.d
+    
+    # Install Doom Emacs
+    log "Installing Doom Emacs..."
+    ~/.emacs.d/bin/doom install
+    
+    # Check if we have custom doom config in dotfiles
+    if [ -d "$REPO_DIR/.doom.d" ]; then
+      log "Found custom Doom configuration in dotfiles..."
+      install_file "$REPO_DIR/.doom.d" "$HOME/.doom.d"
+      
+      # Sync Doom Emacs with custom config
+      log "Syncing Doom Emacs with custom configuration..."
+      ~/.emacs.d/bin/doom sync
     fi
+    
+    success "Doom Emacs installed successfully!"
+  else
+    log "Skipping Doom Emacs installation."
+  fi
 }
 
 # ┌──────────────────────────┐
-# │ SOURCE BUILD FUNCTIONS   │
+# │ SOURCE BUILD FUNCTIONS   │
 # └──────────────────────────┘
 
 build_cmake_from_source() {
-    print_section "CMAKE SOURCE BUILD"
+  print_section "CMAKE SOURCE BUILD"
+  
+  if ask_yes_no "Do you want to build CMake from source?"; then
+    log "Building CMake from source..."
     
-    if ask_yes_no "Do you want to build CMake from source?"; then
-        log "Building CMake from source..."
-        
-        # Create build directory if it doesn't exist
-        mkdir -p "$BUILD_DIR/cmake"
-        cd "$BUILD_DIR/cmake"
-        
-        # Download latest CMake source
-        if [ ! -d "cmake" ]; then
-            log "Cloning CMake repository..."
-            git clone https://github.com/Kitware/CMake.git cmake
-        else
-            log "Updating CMake repository..."
-            cd cmake
-            git pull
-            cd ..
-        fi
-        
-        cd cmake
-        
-        # Build and install CMake
-        log "Configuring CMake build..."
-        ./bootstrap --prefix=/usr/local
-        
-        log "Building CMake (this may take a while)..."
-        make -j$(nproc)
-        
-        log "Installing CMake..."
-        sudo make install
-        
-        # Verify installation
-        cmake_version=$(cmake --version | head -n1)
-        success "CMake built and installed successfully: ${CYAN}$cmake_version${RESET}"
-        
-        # Return to original directory
-        cd "$REPO_DIR"
+    # Create build directory if it doesn't exist
+    mkdir -p "$BUILD_DIR/cmake"
+    cd "$BUILD_DIR/cmake"
+    
+    # Download latest CMake source
+    if [ ! -d "cmake" ]; then
+      log "Cloning CMake repository..."
+      git clone https://github.com/Kitware/CMake.git cmake
     else
-        log "Skipping CMake source build."
+      log "Updating CMake repository..."
+      cd cmake
+      gitpull
+      cd ..
     fi
+    
+    cd cmake
+    
+    # Build and install CMake
+    log "Configuring CMake build..."
+    ./bootstrap --prefix=/usr/local
+    
+    log "Building CMake (this may take a while)..."
+    make -j$(nproc)
+    
+    log "Installing CMake..."
+    sudo make install
+    
+    # Verify installation
+    cmake_version=$(cmake --version | head -n1)
+    success "CMake built and installed successfully: ${CYAN}$cmake_version${RESET}"
+    
+    # Return to original directory
+    cd "$REPO_DIR"
+  else
+    log "Skipping CMake source build."
+  fi
 }
 
 build_neovim_from_source() {
-    print_section "NEOVIM SOURCE BUILD"
+  print_section "NEOVIM SOURCE BUILD"
+  
+  if ask_yes_no "Do you want to build Neovim from source?"; then
+    log "Building Neovim from source..."
     
-    if ask_yes_no "Do you want to build Neovim from source?"; then
-        log "Building Neovim from source..."
-        
-        # Ensure we have all required dependencies
-        if [ "$PACKAGE_MANAGER" = "apt" ]; then
-            log "Installing additional Neovim dependencies..."
-            sudo apt update
-            sudo apt install -y ninja-build gettext libtool libtool-bin autoconf \
-                               automake cmake g++ pkg-config unzip curl \
-                               libluajit-5.1-dev libunibilium-dev libmsgpack-dev \
-                               libtermkey-dev libvterm-dev libuv1-dev \
-                               libluajit-5.1-dev lua-lpeg lua-mpack lua-bitop
-        fi
-        
-        # Create build directory if it doesn't exist
-        mkdir -p "$BUILD_DIR/neovim"
-        cd "$BUILD_DIR/neovim"
-        
-        # Download latest Neovim source
-        if [ ! -d "neovim" ]; then
-            log "Cloning Neovim repository..."
-            git clone https://github.com/neovim/neovim.git neovim
-        else
-            log "Updating Neovim repository..."
-            cd neovim
-            git pull
-            cd ..
-        fi
-        
-        cd neovim
-        
-        # Build and install Neovim
-        log "Building Neovim (this may take a while)..."
-        make CMAKE_BUILD_TYPE=Release -j$(nproc)
-        
-        log "Installing Neovim..."
-        sudo make install
-        
-        # Verify installation
-        nvim_version=$(nvim --version | head -n1)
-        success "Neovim built and installed successfully: ${CYAN}$nvim_version${RESET}"
-        
-        # Return to original directory
-        cd "$REPO_DIR"
-    else
-        log "Skipping Neovim source build."
+    # Ensure we have all required dependencies
+    if [ "$PACKAGE_MANAGER" = "apt" ]; then
+      log "Installing additional Neovim dependencies..."
+      sudo apt update
+      sudo apt install -y ninja-build gettext libtool libtool-bin autoconf \
+                          automake cmake g++ pkg-config unzip curl \
+                          libluajit-5.1-dev libunibilium-dev libmsgpack-dev \
+                          libtermkey-dev libvterm-dev libuv1-dev \
+                          libluajit-5.1-dev lua-lpeg lua-mpack lua-bitop
     fi
+    
+    # Create build directory if it doesn't exist
+    mkdir -p "$BUILD_DIR/neovim"
+    cd "$BUILD_DIR/neovim"
+    
+    # Download latest Neovim source
+    if [ ! -d "neovim" ]; then
+      log "Cloning Neovim repository..."
+      git clone https://github.com/neovim/neovim.git neovim
+    else
+      log "Updating Neovim repository..."
+      cd neovim
+      git pull
+      cd ..
+    fi
+    
+    cd neovim
+    
+    # Build and install Neovim
+    log "Building Neovim (this may take a while)..."
+    make CMAKE_BUILD_TYPE=Release -j$(nproc)
+    
+    log "Installing Neovim..."
+    sudo make install
+    
+    # Verify installation
+    nvim_version=$(nvim --version | head -n1)
+    success "Neovim built and installed successfully: ${CYAN}$nvim_version${RESET}"
+    
+    # Return to original directory
+    cd "$REPO_DIR"
+  else
+    log "Skipping Neovim source build."
+  fi
 }
 
 build_clangd_from_source() {
-    print_section "CLANGD SOURCE BUILD"
+  print_section "CLANGD SOURCE BUILD"
+  
+  if ask_yes_no "Do you want to build clangd from source?"; then
+    log "Building clangd from source..."
     
-    if ask_yes_no "Do you want to build clangd from source?"; then
-        log "Building clangd from source..."
-        
-        # Create build directory if it doesn't exist
-        mkdir -p "$BUILD_DIR/clangd"
-        cd "$BUILD_DIR/clangd"
-        
-        # Download LLVM source
-        if [ ! -d "llvm-project" ]; then
-            log "Cloning LLVM repository..."
-            git clone https://github.com/llvm/llvm-project.git
-        else
-            log "Updating LLVM repository..."
-            cd llvm-project
-            git pull
-            cd ..
-        fi
-        
-        cd llvm-project
-        mkdir -p build && cd build
-        
-        # Build and install clangd
-        log "Configuring clangd build..."
-        cmake -G Ninja ../llvm -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=Release
-        
-        log "Building clangd (this may take a while)..."
-        ninja clangd
-        
-        log "Installing clangd..."
-        sudo ninja install
-        
-        # Verify installation
-        if command -v clangd >/dev/null 2>&1; then
-            clangd_version=$(clangd --version | head -n1)
-            success "clangd built and installed successfully: ${CYAN}$clangd_version${RESET}"
-        else
-            warning "clangd was built but may not be in your PATH."
-        fi
-        
-        # Return to original directory
-        cd "$REPO_DIR"
+    # Create build directory if it doesn't exist
+    mkdir -p "$BUILD_DIR/clangd"
+    cd "$BUILD_DIR/clangd"
+    
+    # Download LLVM source
+    if [ ! -d "llvm-project" ]; then
+      log "Cloning LLVM repository..."
+      git clone https://github.com/llvm/llvm-project.git
     else
-        log "Skipping clangd source build."
+      log "Updating LLVM repository..."
+      cd llvm-project
+      git pull
+      cd ..
     fi
+    
+    cd llvm-project
+    mkdir -p build && cd build
+    
+    # Build and install clangd
+    log "Configuring clangd build..."
+    cmake -G Ninja ../llvm -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=Release
+    
+    log "Building clangd (this may take a while)..."
+    ninja clangd
+    
+    log "Installing clangd..."
+    sudo ninja install
+    
+    # Verify installation
+    if command -v clangd >/dev/null 2>&1; then
+      clangd_version=$(clangd --version | head -n1)
+      success "clangd built and installed successfully: ${CYAN}$clangd_version${RESET}"
+    else
+      warning "clangd was built but may not be in your PATH."
+    fi
+    
+    # Return to original directory
+    cd "$REPO_DIR"
+  else
+    log "Skipping clangd source build."
+  fi
 }
 
-# ┌──────────────────────────┐
-# │ NODE.JS INSTALLATION     │
-# └──────────────────────────┘
 build_nodejs_from_source() {
     print_section "NODE.JS SOURCE BUILD"
-    
+
     if ask_yes_no "Do you want to build Node.js from source?"; then
         log "Building Node.js from source..."
-        
+
         # Create build directory if it doesn't exist
         mkdir -p "$BUILD_DIR/nodejs"
         cd "$BUILD_DIR/nodejs"
-        
+
         # Install dependencies based on the distribution
         log "Installing Node.js build dependencies..."
         case "$PACKAGE_MANAGER" in
@@ -710,7 +791,7 @@ build_nodejs_from_source() {
                 warning "Couldn't identify package manager. You may need to install Node.js dependencies manually."
                 ;;
         esac
-        
+
         # Download latest Node.js source
         if [ ! -d "node" ]; then
             log "Cloning Node.js repository..."
@@ -721,42 +802,42 @@ build_nodejs_from_source() {
             git pull
             cd ..
         fi
-        
+
         cd node
-        
+
         # Check out the latest LTS version
         log "Finding latest LTS version..."
         git fetch --all --tags
-        LATEST_LTS=$(git tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | grep -E '^v[0-9]*[02468]\.' | tail -n1)
-        
+        LATEST_LTS=$(git tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | grep -E '\.0$' | tail -n1)
+
         if [ -n "$LATEST_LTS" ]; then
             log "Checking out Node.js version: ${CYAN}$LATEST_LTS${RESET}"
             git checkout "$LATEST_LTS"
         else
             warning "Could not determine latest LTS version. Using default branch."
         fi
-        
+
         # Configure and build Node.js
         log "Configuring Node.js build..."
         ./configure --prefix=/usr/local
-        
+
         log "Building Node.js (this may take a while)..."
         make -j$(nproc)
-        
+
         log "Installing Node.js..."
         sudo make install
-        
+
         # Verify installation
         if command -v node >/dev/null 2>&1; then
             node_version=$(node --version)
             npm_version=$(npm --version)
             success "Node.js built and installed successfully:"
             echo -e "  Node.js: ${CYAN}$node_version${RESET}"
-            echo -e "  npm:     ${CYAN}$npm_version${RESET}"
+            echo -e "  npm:    ${CYAN}$npm_version${RESET}"
         else
             warning "Node.js was built but may not be in your PATH."
         fi
-        
+
         # Return to original directory
         cd "$REPO_DIR"
     else
@@ -764,57 +845,95 @@ build_nodejs_from_source() {
     fi
 }
 
+
 # ┌──────────────────────────┐
-# │ MAIN ENTRY POINT         │
+# │ SCRIPT INSTALLATION    │
+# └──────────────────────────┘
+
+clone_script_from_github() {
+  print_section "CLONE SCRIPT FROM GITHUB"
+
+  local repo_url="https://github.com/xsoder/scripts.git"  
+  local target_dir="$HOME/scripts"  
+
+  if [ -d "$target_dir" ]; then
+    warning "Directory ${MAGENTA}$target_dir${RESET} already exists."
+    if ask_yes_no "Do you want to remove and re-clone it?"; then
+      log "Removing existing directory..."
+      rm -rf "$target_dir"
+    else
+      log "Skipping clone."
+      return 0
+    fi
+  fi
+
+  log "Cloning repository from ${CYAN}$repo_url${RESET} to ${CYAN}$target_dir${RESET}"
+  git clone "$repo_url" "$target_dir" || error "Failed to clone repository"
+  success "Repository cloned successfully!"
+}
+
+# ┌──────────────────────────┐
+# │ MAIN ENTRY POINT      │
 # └──────────────────────────┘
 main() {
-    print_banner
-    log "Starting dotfiles installation process"
-    
-    detect_distro
-    verify_repo
-    
-    # Ask if the user wants to install packages
-    if ask_yes_no "Do you want to install required system packages?"; then
-        install_packages
-    fi
-    
-    ask_install_method
-    install_configs
-    install_optional_components
-    
-    # Added features
-    install_flatpak
-    setup_zsh
-    install_doom_emacs
-    
-    # Source builds
-    build_cmake_from_source
-    build_neovim_from_source
-    build_clangd_from_source
-    build_nodejs_from_source
-    
-    print_section "INSTALLATION COMPLETE"
-    
-    # Final message
-    if [ -d "$BACKUP_DIR" ]; then
-        success "Installation complete! Backups of your previous configuration files were created in:"
-        echo -e "  ${CYAN}$BACKUP_DIR${RESET}"
-    else
-        success "Installation complete! No existing configuration files were overwritten."
-    fi
-    
-    echo
-    echo -e "${BOLD}${GREEN}┌───────────────────────────────────────────────┐${RESET}"
-    echo -e "${BOLD}${GREEN}│  All done! Your system is now configured!      │${RESET}"
-    echo -e "${BOLD}${GREEN}└───────────────────────────────────────────────┘${RESET}"
-    echo
-    
-    log "You may need to reload your terminal or log out and back in for all changes to take effect."
-    
-    if [[ $(ps -p $$ | awk 'NR==2 {print $4}') != "zsh" && -n "$(which zsh 2>/dev/null)" ]]; then
-        log "To start using ZSH right now, run: ${CYAN}zsh${RESET}"
-    fi
+  print_banner
+  log "Starting dotfiles installation process"
+  
+  detect_distro
+  verify_repo
+  
+  # Ask user to choose terminal emulator
+  ask_terminal_emulator
+  
+  # Ask if the user wants to install packages
+  if ask_yes_no "Do you want to install required system packages?"; then
+    install_packages
+  fi
+  
+  ask_install_method
+  install_configs
+  install_optional_components
+  # Clone my script repo  
+  clone_script_from_github
+  # Added features
+  install_flatpak
+  setup_zsh
+  install_doom_emacs
+  
+  # Source builds
+  build_cmake_from_source
+  build_neovim_from_source
+  build_clangd_from_source
+  build_nodejs_from_source
+  
+  print_section "INSTALLATION COMPLETE"
+  
+  # Final message
+  if [ -d "$BACKUP_DIR" ]; then
+    success "Installation complete! Backups of your previous configuration files were created in:"
+    echo -e "  ${CYAN}$BACKUP_DIR${RESET}"
+  else
+    success "Installation complete! No existing configuration files were overwritten."
+  fi
+  
+  echo
+  echo -e "${BOLD}${GREEN}┌───────────────────────────────────────────────┐${RESET}"
+  echo -e "${BOLD}${GREEN}│  All done! Your system is now configured!     │${RESET}"
+  echo -e "${BOLD}${GREEN}└───────────────────────────────────────────────┘${RESET}"
+  echo
+  
+  log "You may need to reload your terminal or log out and back in for all changes to take effect."
+  
+  if [[ $(ps -p $$ | awk 'NR==2 {print $4}') != "zsh" && -n "$(which zsh 2>/dev/null)" ]]; then
+    log "To start using ZSH right now, run: ${CYAN}zsh${RESET}"
+  fi
+  
+  if [ "$TERMINAL_EMULATOR" = "ghostty" ]; then
+    log "To start using Ghostty terminal, run: ${CYAN}ghostty${RESET}"
+  elif [ "$TERMINAL_EMULATOR" = "kitty" ]; then
+    log "To start using Kitty terminal, run: ${CYAN}kitty${RESET}"
+  fi
 }
 
 main
+

@@ -10,15 +10,15 @@ vim.keymap.set("n", "<c-l>", ":wincmd l<CR>")
 -- Basic operations
 vim.keymap.set("n", "<leader>h", ":nohlsearch<CR>")
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
-vim.keymap.set("n", "<leader>w", ":wq<CR>")
+vim.keymap.set("n", "<leader>w", ":w<CR>")
 vim.keymap.set("n", "<Leader>q", "<cmd>q!<CR>", { noremap = true, silent = true })
 
 -- Reload configuration
 vim.api.nvim_set_keymap(
-	"n",
-	"<Leader><leader>r",
-	":luafile ~/.config/nvim/init.lua<CR>",
-	{ noremap = true, silent = true }
+    "n",
+    "<Leader><leader>r",
+    ":luafile ~/.config/nvim/init.lua<CR>",
+    { noremap = true, silent = true }
 )
 
 -- Clipboard operations
@@ -67,10 +67,10 @@ vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>")
 vim.api.nvim_set_keymap("n", "<Esc>", ":write<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<Leader>mp", ":vsp | terminal glow %<CR>i", { noremap = true, silent = true })
 vim.api.nvim_set_keymap(
-	"n",
-	"<Leader>tp",
-	':silent !tmux new-window "zsh -c \\"glow %; exec zsh\\"" <CR>',
-	{ noremap = true, silent = true }
+    "n",
+    "<Leader>tp",
+    ':silent !tmux new-window "zsh -c \\"glow %; exec zsh\\"" <CR>',
+    { noremap = true, silent = true }
 )
 
 -- Navigation shortcuts
@@ -79,34 +79,34 @@ vim.api.nvim_set_keymap("n", ";", "0w", { noremap = true, silent = true })
 
 -- Number increment function and mapping
 function increment_number_in_line()
-	local line = vim.api.nvim_get_current_line()
-	local updated_line = line:gsub("%d+", function(num)
-		local n = tonumber(num)
-		return tostring(n + 1)
-	end, 1)
-	vim.api.nvim_set_current_line(updated_line)
+    local line = vim.api.nvim_get_current_line()
+    local updated_line = line:gsub("%d+", function(num)
+        local n = tonumber(num)
+        return tostring(n + 1)
+    end, 1)
+    vim.api.nvim_set_current_line(updated_line)
 end
 
 vim.api.nvim_set_keymap("n", "<leader>;", ":lua increment_number_in_line()<CR>", { noremap = true, silent = true })
 
 -- Cheatsheet mapping
 vim.keymap.set(
-	"n",
-	"<leader>c",
-	':lua local lang = vim.fn.input("Enter language for cheatsheet: ") lang = lang ~= "" and lang or "python" vim.cmd("silent !tmux new-window -n \'cheatsheet\' \'curl cheat.sh/" .. lang .. " && zsh\'")<CR>',
-	{ noremap = true, silent = true }
+    "n",
+    "<leader>c",
+    ':lua local lang = vim.fn.input("Enter language for cheatsheet: ") lang = lang ~= "" and lang or "python" vim.cmd("silent !tmux new-window -n \'cheatsheet\' \'curl cheat.sh/" .. lang .. " && zsh\'")<CR>',
+    { noremap = true, silent = true }
 )
 -- Random theme switcher
 vim.keymap.set("n", "<leader>tr", function()
-	_G.random_theme()
+    _G.random_theme()
 end, { desc = "Random theme" })
 
 -- Keybind to show all custom keymaps
 vim.keymap.set("n", "<leader>?", function()
-	require("telescope.builtin").keymaps({
-		modes = { "n", "i", "v", "x", "s", "o", "t", "c" },
-		show_plug = false,
-	})
+    require("telescope.builtin").keymaps({
+        modes = { "n", "i", "v", "x", "s", "o", "t", "c" },
+        show_plug = false,
+    })
 end, { desc = "Show all keybindings" })
 vim.api.nvim_set_keymap("n", "<leader>s*", "ysiw*", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", '<leader>s"', 'ysiw"', { noremap = true, silent = true })

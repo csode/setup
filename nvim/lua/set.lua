@@ -68,3 +68,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
 vim.keymap.set("n", "<leader>sl", function()
     require("buffer-manager.session").load_session()
 end, { desc = "BufferManager: Restore session" })
+vim.opt.wrap = true
+vim.opt.linebreak = true
+vim.opt.breakindent = true
