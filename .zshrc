@@ -120,6 +120,7 @@ export PATH="$HOME/packages/zig:$PATH"
 alias cpp="~/scripts/cpp.sh"
 alias gitter="~/scripts/gitter.sh"
 alias ccg="~/scripts/cpp.sh"
+alias packages="~/scripts/package.sh"
 
 alias luamake="/home/csode/packages/lua-language-server/3rd/luamake/luamake"
 eval "$(zoxide init zsh)"
