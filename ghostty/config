@@ -18,5 +18,4 @@ mouse-scroll-multiplier = 2
 # Colors
 background = #000000         
 app-notifications = false
-
-
+#background-opacity = 0.8

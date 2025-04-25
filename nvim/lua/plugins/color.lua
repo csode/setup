@@ -1,8 +1,8 @@
 return {
-    {
-        "rose-pine/neovim",
-        config = function()
-            vim.cmd([[
+	{
+		"rose-pine/neovim",
+		config = function()
+			vim.cmd([[
                 colorscheme rose-pine
                 highlight Normal guibg=NONE ctermbg=NONE
                 highlight NonText guibg=NONE ctermbg=NONE
@@ -10,6 +10,6 @@ return {
                 highlight LineNr guibg=NONE ctermbg=NONE
                 highlight CursorLineNr guibg=NONE ctermbg=NONE
             ]])
-        end,
-    },
+		end,
+	},
 }
