@@ -1,0 +1,42 @@
+# Customized Starship configuration
+# For config options, see: https://starship.rs/config/
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[✗](bold red)"
+
+[cmd_duration]
+min_time = 500
+format = "took [$duration](bold yellow)"
+
+[directory]
+truncation_length = 3
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+format = "on [$symbol$branch]($style) "
+style = "bold purple"
+
+[git_status]
+format = "([\\[$all_status$ahead_behind\\]]($style) )"
+style = "bold red"
+
+[nodejs]
+format = "via [🟢 $version](bold green) "
+
+[package]
+format = "[$symbol$version]($style) "
+symbol = "📦 "
+style = "bold 208"
+
+[python]
+format = "via [🐍 $version]($style) "
+style = "bold green"
+
+[rust]
+format = "via [🦀 $version]($style) "
+style = "bold red"
+
+[username]
+format = "[$user]($style) "
+style_user = "bold blue"

@@ -6,7 +6,7 @@
 set -e
 
 # ┌─────────────────────────────────┐
-# │ COLOR AND FORMATTING            │
+# │ COLOR AND FORMATTING            │
 # └─────────────────────────────────┘
 RESET='\033[0m'
 BOLD='\033[1m'
@@ -31,6 +31,8 @@ INSTALL_METHOD=""
 DISTRO=""
 PACKAGE_MANAGER=""
 TERMINAL_EMULATOR=""
+SHELL_CHOICE=""
+USE_MY_CONFIG="false"
 
 # ┌─────────────────────┐
 # │ LOGGING AND DISPLAY │
@@ -38,9 +40,9 @@ TERMINAL_EMULATOR=""
 print_banner() {
   echo -e "${BOLD}${CYAN}"
   echo "╔══════════════════════════════════════════════════════════╗"
-  echo "║                                                          ║"
-  echo "║                         DOTFILES INSTALLER               ║"
-  echo "║                                                          ║"
+  echo "║                                                          ║"
+  echo "║                      DOTFILES INSTALLER                  ║"
+  echo "║                                                          ║"
   echo "╚══════════════════════════════════════════════════════════╝"
   echo -e "${RESET}"
 }
@@ -70,7 +72,7 @@ error() {
 }
 
 # ┌─────────────────────┐
-# │ UTILITY FUNCTIONS  │
+# │ UTILITY FUNCTIONS  │
 # └─────────────────────┘
 detect_distro() {
   if [ -f /etc/os-release ]; then
@@ -178,6 +180,42 @@ ask_terminal_emulator() {
   done
   
   log "Selected terminal emulator: ${BOLD}${MAGENTA}${TERMINAL_EMULATOR}${RESET}"
+}
+
+ask_shell() {
+  echo -e "${BOLD}${MAGENTA}Please choose your preferred shell:${RESET}"
+  echo -e "  ${BOLD}1)${RESET} ${CYAN}Bash${RESET} (default shell, widely compatible)"
+  echo -e "  ${BOLD}2)${RESET} ${CYAN}Zsh${RESET} with Oh My Zsh (highly customizable, compatible with bash)"
+  echo -e "  ${BOLD}3)${RESET} ${CYAN}Fish${RESET} (user-friendly, modern features out of the box)"
+
+  while [ -z "$SHELL_CHOICE" ]; do
+    read -p "Enter your choice [1/2/3]: " choice
+    case $choice in
+      1)
+        SHELL_CHOICE="bash"
+        ;;
+      2)
+        SHELL_CHOICE="zsh"
+        ;;
+      3)
+        SHELL_CHOICE="fish"
+        ;;
+      *)
+        warning "Invalid choice. Please enter ${BOLD}1${RESET}, ${BOLD}2${RESET} or ${BOLD}3${RESET}."
+        ;;
+    esac
+  done
+
+  log "Selected shell: ${BOLD}${MAGENTA}${SHELL_CHOICE}${RESET}"
+  
+  # Ask if they want to use your config for the chosen shell
+  if ask_yes_no "Do you want to use my ${SHELL_CHOICE} configuration?" "y"; then
+    USE_MY_CONFIG="true"
+    log "Will install custom ${SHELL_CHOICE} configuration"
+  else
+    USE_MY_CONFIG="false"
+    log "Will not install custom ${SHELL_CHOICE} configuration"
+  fi
 }
 
 ask_yes_no() {
@@ -339,7 +377,7 @@ install_terminal_emulator() {
 }
 
 # ┌──────────────────────────┐
-# │ DOTFILES INSTALLATION  │
+# │ DOTFILES INSTALLATION  │
 # └──────────────────────────┘
 install_file() {
   local src=$1
@@ -393,9 +431,29 @@ install_configs() {
   # i3
   install_file "$REPO_DIR/i3" "$CONFIG_DIR/i3"
 
-  # zsh (if exists)
-  if [ -f "$REPO_DIR/.zshrc" ]; then
-    install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
+  # Shell configuration - only install if user wants to use our config
+  if [ "$USE_MY_CONFIG" = "true" ]; then
+    if [ "$SHELL_CHOICE" = "bash" ]; then
+      if [ -f "$REPO_DIR/.bashrc" ]; then
+        install_file "$REPO_DIR/.bashrc" "$HOME/.bashrc"
+      fi
+      if [ -f "$REPO_DIR/.bash_profile" ]; then
+        install_file "$REPO_DIR/.bash_profile" "$HOME/.bash_profile"
+      fi
+    elif [ "$SHELL_CHOICE" = "zsh" ]; then
+      if [ -f "$REPO_DIR/.zshrc" ]; then
+        install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
+      fi
+    elif [ "$SHELL_CHOICE" = "fish" ]; then
+      if [ -d "$REPO_DIR/fish" ]; then
+        install_file "$REPO_DIR/fish" "$CONFIG_DIR/fish"
+      fi
+    fi
+  fi
+
+  # Starship configuration
+  if [ -f "$REPO_DIR/starship.toml" ]; then
+    install_file "$REPO_DIR/starship.toml" "$CONFIG_DIR/starship.toml"
   fi
 
   # picom (always copy)
@@ -439,7 +497,7 @@ install_optional_components() {
 }
 
 # ┌──────────────────────────┐
-# │ FLATPAK INSTALLATION   │
+# │ FLATPAK INSTALLATION   │
 # └──────────────────────────┘
 install_flatpak() {
   print_section "FLATPAK SETUP"
@@ -492,10 +550,102 @@ install_flatpak() {
 }
 
 # ┌──────────────────────────┐
-# │ ZSH SETUP            │
+# │ SHELL SETUP              │
 # └──────────────────────────┘
+install_starship() {
+  print_section "STARSHIP PROMPT SETUP"
+  
+  if ! command -v curl >/dev/null 2>&1; then
+    log "Installing curl (required for Starship installation)..."
+    case "$PACKAGE_MANAGER" in
+      apt)
+        sudo apt update && sudo apt install -y curl
+        ;;
+      dnf)
+        sudo dnf install -y curl
+        ;;
+      pacman)
+        sudo pacman -S --noconfirm curl
+        ;;
+      zypper)
+        sudo zypper install -y curl
+        ;;
+      *)
+        warning "Couldn't identify package manager. Please install curl manually."
+        return 1
+        ;;
+    esac
+  fi
+  
+  log "Installing Starship prompt..."
+  
+  if ask_yes_no "Do you want to install Starship prompt?"; then
+    log "Downloading and running Starship installer..."
+    curl -sS https://starship.rs/install.sh | sh -s -- -y
+    
+    # Create Starship config if it doesn't exist in the dotfiles repo
+    if [ ! -f "$REPO_DIR/starship.toml" ] && [ ! -f "$CONFIG_DIR/starship.toml" ]; then
+      log "Creating default Starship configuration..."
+      mkdir -p "$CONFIG_DIR"
+      echo '# Default Starship configuration
+# For config options, see: https://starship.rs/config/
+
+[character]
+success_symbol = "[➜](bold green)"
+error_symbol = "[✗](bold red)"
+
+[cmd_duration]
+min_time = 500
+format = "took [$duration](bold yellow)"
+
+[directory]
+truncation_length = 3
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+format = "on [$symbol$branch]($style) "
+style = "bold purple"
+
+[git_status]
+format = "([\\[$all_status$ahead_behind\\]]($style) )"
+style = "bold red"
+
+[nodejs]
+format = "via [🟢 $version](bold green) "
+
+[package]
+format = "[$symbol$version]($style) "
+symbol = "📦 "
+style = "bold 208"
+
+[python]
+format = "via [🐍 $version]($style) "
+style = "bold green"
+
+[rust]
+format = "via [🦀 $version]($style) "
+style = "bold red"
+
+[username]
+format = "[$user]($style) "
+style_user = "bold blue"
+' > "$CONFIG_DIR/starship.toml"
+    fi
+    
+    success "Starship prompt installed successfully!"
+  else
+    log "Skipping Starship prompt installation."
+  fi
+}
+
 setup_zsh() {
   print_section "ZSH SETUP"
+  
+  # Only proceed if ZSH is the chosen shell
+  if [ "$SHELL_CHOICE" != "zsh" ]; then
+    log "ZSH not selected as preferred shell. Skipping setup."
+    return 0
+  fi
   
   log "Checking for ZSH..."
   
@@ -528,44 +678,195 @@ setup_zsh() {
   fi
   
   # Set ZSH as default shell
-  if ask_yes_no "Do you want to set ZSH as your default shell?"; then
-    log "Setting ZSH as default shell..."
-    chsh -s $(which zsh)
-    success "ZSH set as default shell! This will take effect on next login."
-  fi
+  log "Setting ZSH as default shell..."
+  chsh -s $(which zsh)
+  success "ZSH set as default shell! This will take effect on next login."
   
-  # Install Oh My ZSH
-  if ask_yes_no "Do you want to install Oh My ZSH?"; then
-    log "Installing Oh My ZSH..."
-    if [ -d "$HOME/.oh-my-zsh" ]; then
-      log "Oh My ZSH is already installed, backing up..."
-      backup_file "$HOME/.oh-my-zsh"
-      rm -rf "$HOME/.oh-my-zsh"
-    fi
-    
-    # Save current shell to variable for safe return
-    CURRENT_SHELL=$(ps -p $$ | awk 'NR==2 {print $4}')
-    
-    # Use curl or wget to install Oh My ZSH
-    if command -v curl >/dev/null 2>&1; then
-      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    elif command -v wget >/dev/null 2>&1; then
-      sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    else
-      warning "Neither curl nor wget is installed. Please install Oh My ZSH manually."
-      return 1
-    fi
-    
-    success "Oh My ZSH installed successfully!"
-    
-    # If we had a custom .zshrc in our dotfiles, restore it over Oh My ZSH's default
-    if [ -f "$REPO_DIR/.zshrc" ]; then
-      log "Restoring custom .zshrc from dotfiles..."
-      install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
+  # Only install Oh My ZSH if user wants to use our config
+  if [ "$USE_MY_CONFIG" = "true" ]; then
+    # Install Oh My ZSH
+    if ask_yes_no "Do you want to install Oh My ZSH?"; then
+      log "Installing Oh My ZSH..."
+      if [ -d "$HOME/.oh-my-zsh" ]; then
+        log "Oh My ZSH is already installed, backing up..."
+        backup_file "$HOME/.oh-my-zsh"
+        rm -rf "$HOME/.oh-my-zsh"
+      fi
+      
+      # Save current shell to variable for safe return
+      CURRENT_SHELL=$(ps -p $$ | awk 'NR==2 {print $4}')
+      
+      # Use curl or wget to install Oh My ZSH
+      if command -v curl >/dev/null 2>&1; then
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      elif command -v wget >/dev/null 2>&1; then
+        sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      else
+        warning "Neither curl nor wget is installed. Please install Oh My ZSH manually."
+        return 1
+      fi
+      
+      success "Oh My ZSH installed successfully!"
+      
+      # If we had a custom .zshrc in our dotfiles, restore it over Oh My ZSH's default
+      if [ -f "$REPO_DIR/.zshrc" ]; then
+        log "Restoring custom .zshrc from dotfiles..."
+        install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
+      fi
+      
+      # Add Starship init to .zshrc if Starship is installed
+      if command -v starship >/dev/null 2>&1; then
+        if ! grep -q "eval \"\$(starship init zsh)\"" "$HOME/.zshrc"; then
+          log "Adding Starship initialization to .zshrc..."
+          echo -e '\n# Initialize Starship prompt\neval "$(starship init zsh)"' >> "$HOME/.zshrc"
+        fi
+      fi
     fi
   fi
   
   return 0
+}
+
+setup_fish() {
+  print_section "FISH SETUP"
+  
+  # Only proceed if Fish is the chosen shell
+  if [ "$SHELL_CHOICE" != "fish" ]; then
+    log "Fish not selected as preferred shell. Skipping setup."
+    return 0
+  fi
+  
+  log "Checking for Fish..."
+  
+  if ! command -v fish >/dev/null 2>&1; then
+    if ask_yes_no "Fish is not installed. Do you want to install it?"; then
+      log "Installing Fish using $PACKAGE_MANAGER..."
+      case "$PACKAGE_MANAGER" in
+        apt)
+          sudo apt-add-repository ppa:fish-shell/release-3 -y
+          sudo apt update && sudo apt install -y fish
+          ;;
+        dnf)
+          sudo dnf install -y fish
+          ;;
+        pacman)
+          sudo pacman -S --noconfirm fish
+          ;;
+        zypper)
+          sudo zypper install -y fish
+          ;;
+        *)
+          warning "Couldn't identify package manager. Please install Fish manually."
+          return 1
+          ;;
+      esac
+    else
+      return 0
+    fi
+  else
+    log "Fish is already installed."
+  fi
+  
+  # Set Fish as default shell
+  log "Setting Fish as default shell..."
+  chsh -s $(which fish)
+  success "Fish set as default shell! This will take effect on next login."
+  
+  # Only install our config if user wants it
+  if [ "$USE_MY_CONFIG" = "true" ]; then
+    # Create Fish configuration directory if it doesn't exist
+    mkdir -p "$CONFIG_DIR/fish"
+    
+    # Link fish config files from dotfiles if they exist
+    if [ -d "$REPO_DIR/fish" ]; then
+      log "Installing Fish configuration from dotfiles..."
+      install_file "$REPO_DIR/fish" "$CONFIG_DIR/fish"
+    else
+      # Create config.fish if it doesn't exist
+      if [ ! -f "$CONFIG_DIR/fish/config.fish" ]; then
+        log "Creating default Fish configuration..."
+        mkdir -p "$CONFIG_DIR/fish"
+        echo '# Fish configuration
+
+# Set editor
+set -gx EDITOR nvim
+
+# Custom path additions
+fish_add_path $HOME/.local/bin
+
+# Aliases
+alias l "ls -la"
+alias vim "nvim"
+alias g "git"
+
+# Load local config if it exists
+if test -f $HOME/.config/fish/local.fish
+    source $HOME/.config/fish/local.fish
+end
+' > "$CONFIG_DIR/fish/config.fish"
+      fi
+    fi
+    
+    # Add Starship init to config.fish if Starship is installed
+    if command -v starship >/dev/null 2>&1; then
+      if ! grep -q "starship init fish" "$CONFIG_DIR/fish/config.fish"; then
+        log "Adding Starship initialization to config.fish..."
+        echo -e '\n# Initialize Starship prompt\nstarship init fish | source' >> "$CONFIG_DIR/fish/config.fish"
+      fi
+    fi
+  fi
+  
+  return 0
+}
+
+setup_bash() {
+  print_section "BASH SETUP"
+  
+  # Only proceed if Bash is the chosen shell
+  if [ "$SHELL_CHOICE" != "bash" ]; then
+    log "Bash not selected as preferred shell. Skipping setup."
+    return 0
+  fi
+  
+  # Only install our config if user wants it
+  if [ "$USE_MY_CONFIG" = "true" ]; then
+    if [ -f "$REPO_DIR/.bashrc" ]; then
+      log "Installing custom .bashrc..."
+      install_file "$REPO_DIR/.bashrc" "$HOME/.bashrc"
+    fi
+    
+    if [ -f "$REPO_DIR/.bash_profile" ]; then
+      log "Installing custom .bash_profile..."
+      install_file "$REPO_DIR/.bash_profile" "$HOME/.bash_profile"
+    fi
+    
+    # Add Starship init to .bashrc if Starship is installed
+    if command -v starship >/dev/null 2>&1; then
+      if [ -f "$HOME/.bashrc" ] && ! grep -q "eval \"\$(starship init bash)\"" "$HOME/.bashrc"; then
+        log "Adding Starship initialization to .bashrc..."
+        echo -e '\n# Initialize Starship prompt\neval "$(starship init bash)"' >> "$HOME/.bashrc"
+      fi
+    fi
+  fi
+  
+  return 0
+}
+
+setup_shell() {
+  # Ask user which shell they prefer
+  ask_shell
+  
+  # Install and set up Starship prompt first
+  install_starship
+  
+  # Set up the chosen shell
+  if [ "$SHELL_CHOICE" = "bash" ]; then
+    setup_bash
+  elif [ "$SHELL_CHOICE" = "zsh" ]; then
+    setup_zsh
+  elif [ "$SHELL_CHOICE" = "fish" ]; then
+    setup_fish
+  fi
 }
 
 # ┌──────────────────────────┐
@@ -573,40 +874,40 @@ setup_zsh() {
 # └──────────────────────────┘
 install_doom_emacs() {
   print_section "DOOM EMACS SETUP"
-  
+
   if ! command -v emacs >/dev/null 2>&1; then
     warning "Emacs is not installed. Please install Emacs first."
     return 1
   fi
-  
+
   if ask_yes_no "Do you want to install Doom Emacs?"; then
     log "Installing Doom Emacs..."
-    
+
     # Backup existing config if it exists
     if [ -d "$HOME/.emacs.d" ]; then
       log "Backing up existing Emacs configuration..."
       backup_file "$HOME/.emacs.d"
       rm -rf "$HOME/.emacs.d"
     fi
-    
+
     # Clone Doom Emacs
     log "Cloning Doom Emacs repository..."
     git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.emacs.d
-    
+
     # Install Doom Emacs
     log "Installing Doom Emacs..."
     ~/.emacs.d/bin/doom install
-    
+
     # Check if we have custom doom config in dotfiles
     if [ -d "$REPO_DIR/.doom.d" ]; then
       log "Found custom Doom configuration in dotfiles..."
       install_file "$REPO_DIR/.doom.d" "$HOME/.doom.d"
-      
+
       # Sync Doom Emacs with custom config
       log "Syncing Doom Emacs with custom configuration..."
       ~/.emacs.d/bin/doom sync
     fi
-    
+
     success "Doom Emacs installed successfully!"
   else
     log "Skipping Doom Emacs installation."
@@ -619,14 +920,14 @@ install_doom_emacs() {
 
 build_cmake_from_source() {
   print_section "CMAKE SOURCE BUILD"
-  
+
   if ask_yes_no "Do you want to build CMake from source?"; then
     log "Building CMake from source..."
-    
+
     # Create build directory if it doesn't exist
     mkdir -p "$BUILD_DIR/cmake"
     cd "$BUILD_DIR/cmake"
-    
+
     # Download latest CMake source
     if [ ! -d "cmake" ]; then
       log "Cloning CMake repository..."
@@ -634,26 +935,26 @@ build_cmake_from_source() {
     else
       log "Updating CMake repository..."
       cd cmake
-      gitpull
+      git pull
       cd ..
     fi
-    
+
     cd cmake
-    
+
     # Build and install CMake
     log "Configuring CMake build..."
     ./bootstrap --prefix=/usr/local
-    
+
     log "Building CMake (this may take a while)..."
     make -j$(nproc)
-    
+
     log "Installing CMake..."
     sudo make install
-    
+
     # Verify installation
     cmake_version=$(cmake --version | head -n1)
     success "CMake built and installed successfully: ${CYAN}$cmake_version${RESET}"
-    
+
     # Return to original directory
     cd "$REPO_DIR"
   else
@@ -663,10 +964,10 @@ build_cmake_from_source() {
 
 build_neovim_from_source() {
   print_section "NEOVIM SOURCE BUILD"
-  
+
   if ask_yes_no "Do you want to build Neovim from source?"; then
     log "Building Neovim from source..."
-    
+
     # Ensure we have all required dependencies
     if [ "$PACKAGE_MANAGER" = "apt" ]; then
       log "Installing additional Neovim dependencies..."
@@ -677,11 +978,11 @@ build_neovim_from_source() {
                           libtermkey-dev libvterm-dev libuv1-dev \
                           libluajit-5.1-dev lua-lpeg lua-mpack lua-bitop
     fi
-    
+
     # Create build directory if it doesn't exist
     mkdir -p "$BUILD_DIR/neovim"
     cd "$BUILD_DIR/neovim"
-    
+
     # Download latest Neovim source
     if [ ! -d "neovim" ]; then
       log "Cloning Neovim repository..."
@@ -692,20 +993,20 @@ build_neovim_from_source() {
       git pull
       cd ..
     fi
-    
+
     cd neovim
-    
+
     # Build and install Neovim
     log "Building Neovim (this may take a while)..."
     make CMAKE_BUILD_TYPE=Release -j$(nproc)
-    
+
     log "Installing Neovim..."
     sudo make install
-    
+
     # Verify installation
     nvim_version=$(nvim --version | head -n1)
     success "Neovim built and installed successfully: ${CYAN}$nvim_version${RESET}"
-    
+
     # Return to original directory
     cd "$REPO_DIR"
   else
@@ -715,14 +1016,14 @@ build_neovim_from_source() {
 
 build_clangd_from_source() {
   print_section "CLANGD SOURCE BUILD"
-  
+
   if ask_yes_no "Do you want to build clangd from source?"; then
     log "Building clangd from source..."
-    
+
     # Create build directory if it doesn't exist
     mkdir -p "$BUILD_DIR/clangd"
     cd "$BUILD_DIR/clangd"
-    
+
     # Download LLVM source
     if [ ! -d "llvm-project" ]; then
       log "Cloning LLVM repository..."
@@ -733,20 +1034,20 @@ build_clangd_from_source() {
       git pull
       cd ..
     fi
-    
+
     cd llvm-project
     mkdir -p build && cd build
-    
+
     # Build and install clangd
     log "Configuring clangd build..."
     cmake -G Ninja ../llvm -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=Release
-    
+
     log "Building clangd (this may take a while)..."
     ninja clangd
-    
+
     log "Installing clangd..."
     sudo ninja install
-    
+
     # Verify installation
     if command -v clangd >/dev/null 2>&1; then
       clangd_version=$(clangd --version | head -n1)
@@ -754,7 +1055,7 @@ build_clangd_from_source() {
     else
       warning "clangd was built but may not be in your PATH."
     fi
-    
+
     # Return to original directory
     cd "$REPO_DIR"
   else
@@ -853,8 +1154,8 @@ build_nodejs_from_source() {
 clone_script_from_github() {
   print_section "CLONE SCRIPT FROM GITHUB"
 
-  local repo_url="https://github.com/xsoder/scripts.git"  
-  local target_dir="$HOME/scripts"  
+  local repo_url="https://github.com/xsoder/scripts.git"
+  local target_dir="$HOME/scripts"
 
   if [ -d "$target_dir" ]; then
     warning "Directory ${MAGENTA}$target_dir${RESET} already exists."
@@ -878,36 +1179,36 @@ clone_script_from_github() {
 main() {
   print_banner
   log "Starting dotfiles installation process"
-  
+
   detect_distro
   verify_repo
-  
+
   # Ask user to choose terminal emulator
   ask_terminal_emulator
-  
+
   # Ask if the user wants to install packages
   if ask_yes_no "Do you want to install required system packages?"; then
     install_packages
   fi
-  
+
   ask_install_method
   install_configs
   install_optional_components
-  # Clone my script repo  
+  # Clone my script repo
   clone_script_from_github
   # Added features
   install_flatpak
-  setup_zsh
+  setup_shell
   install_doom_emacs
-  
+
   # Source builds
   build_cmake_from_source
   build_neovim_from_source
   build_clangd_from_source
   build_nodejs_from_source
-  
+
   print_section "INSTALLATION COMPLETE"
-  
+
   # Final message
   if [ -d "$BACKUP_DIR" ]; then
     success "Installation complete! Backups of your previous configuration files were created in:"
@@ -915,19 +1216,19 @@ main() {
   else
     success "Installation complete! No existing configuration files were overwritten."
   fi
-  
+
   echo
   echo -e "${BOLD}${GREEN}┌───────────────────────────────────────────────┐${RESET}"
   echo -e "${BOLD}${GREEN}│  All done! Your system is now configured!     │${RESET}"
   echo -e "${BOLD}${GREEN}└───────────────────────────────────────────────┘${RESET}"
   echo
-  
+
   log "You may need to reload your terminal or log out and back in for all changes to take effect."
-  
+
   if [[ $(ps -p $$ | awk 'NR==2 {print $4}') != "zsh" && -n "$(which zsh 2>/dev/null)" ]]; then
     log "To start using ZSH right now, run: ${CYAN}zsh${RESET}"
   fi
-  
+
   if [ "$TERMINAL_EMULATOR" = "ghostty" ]; then
     log "To start using Ghostty terminal, run: ${CYAN}ghostty${RESET}"
   elif [ "$TERMINAL_EMULATOR" = "kitty" ]; then
@@ -936,4 +1237,3 @@ main() {
 }
 
 main
-
