@@ -8,6 +8,7 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 
 exec --no-startup-id nm-applet
 exec --no-startup-id blueman-applet
+exec_always --no-startup-id xclip -selection clipboard -loops 0
 exec_always --no-startup-id picom --config ~/.config/picom.conf --experimental-backends
 exec_always setxkbmap -option "caps:escape"
 exec_always pipewire 

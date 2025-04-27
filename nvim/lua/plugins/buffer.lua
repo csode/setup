@@ -10,7 +10,7 @@ return {
             require("buffer-manager").setup({
                 auto_load_session = false,
                 window = {
-                    width = 0.6, -- Your preferred default size
+                    width = 0.6,
                     height = 0.5,
                 },
             })

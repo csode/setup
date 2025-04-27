@@ -1,5 +1,0 @@
-* First
-** Second
-*** Finally
-    **** I am him
-** So now THis is the full read me

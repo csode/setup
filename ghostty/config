@@ -1,13 +1,13 @@
 # Font settings
-font-size = 19
+font-size = 22
+font-family = Spleen 32x64
 adjust-cell-height = 35%
-
+theme = rose-pine
 # Window appearance
 window-decoration = false
 window-padding-balance = true
 window-save-state = always
 window-colorspace = "display-p3"
-macos-titlebar-style = transparent
 
 # Terminal behavior
 shell-integration-features = no-cursor,sudo,no-title
@@ -18,4 +18,5 @@ mouse-scroll-multiplier = 2
 # Colors
 background = #000000         
 app-notifications = false
-#background-opacity = 0.8
+background-opacity = 0.7
+#background-blur = 20
