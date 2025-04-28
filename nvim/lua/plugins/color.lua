@@ -1,8 +1,8 @@
 return {
-	{
-		"rose-pine/neovim",
-		config = function()
-			vim.cmd([[
+    {
+        "rose-pine/neovim",
+        config = function()
+            vim.cmd([[
 				colorscheme rose-pine
 
 				" Main backgrounds
@@ -47,6 +47,6 @@ return {
 				" WhichKey (if you use it)
 				highlight WhichKeyFloat guibg=NONE ctermbg=NONE
 			]])
-		end,
-	},
+        end,
+    },
 }

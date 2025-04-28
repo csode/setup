@@ -1,5 +1,12 @@
 # This file contains fish universal variable definitions.
 # VERSION: 3.0
+SETUVAR --export DOOMDIR:/home/csode/\x2econfig/doom
+SETUVAR --export EDITOR:nvim
+SETUVAR --export GCM_CREDENTIAL_STORE:cache
+SETUVAR --export GIT_ASKPASS:git\x2dcredential\x2dmanager\x2dcore
+SETUVAR --export GIT_TERMINAL_PROMPT:1
+SETUVAR --export NVM_DIR:/home/csode/\x2envm
+SETUVAR --export --path PATH:/home/csode/packages/zig\x1e/home/csode/\x2ecargo/bin\x1e/home/csode/\x2elocal/bin\x1e/usr/local/sbin\x1e/usr/local/bin\x1e/usr/sbin\x1e/usr/bin\x1e/sbin\x1e/bin\x1e/usr/games\x1e/usr/local/games\x1e/snap/bin
 SETUVAR __fish_initialized:3400
 SETUVAR fish_color_autosuggestion:brblack
 SETUVAR fish_color_cancel:\x2dr
