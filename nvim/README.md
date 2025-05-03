@@ -1,96 +1,18 @@
-# My Neovim Configuration
+### ThePrimeagen's init.lua
+Prerequisite: install [ripgrep](https://github.com/BurntSushi/ripgrep).
 
-Welcome to my Neovim configuration. This is my personal setup optimized for development with comprehensive LSP support.
+[The full video of me setting up this repo](https://www.youtube.com/watch?v=w7i4amO_zaE)
 
-[View Neovim Cheatsheet](./CHEATSHEET.md)
+For anyone that is interested in my vimrc, i will have a commit log below
+documenting each one of my commits (easy to C-f the change you want to know
+about though i would just suggest `git log -S`).
 
-## Preview
+### Change Log
+* [33eee9ad](https://github.com/ThePrimeagen/init.lua/commit/33eee9ad0c035a92137d99dae06a2396be4c892e) initial commits
+* [cb210006](https://github.com/ThePrimeagen/init.lua/commit/cb210006356b4b613b71c345cb2b02eefa961fc0) netrw, autogroups for yank highlighting, and auto remove whitespace
+* [c8c0bf4a](https://github.com/ThePrimeagen/init.lua/commit/c8c0bf4aeacd0bd77136d9c5ee490680515a106b) zenmode.  i really like this plugin
+* [81c770d2](https://github.com/ThePrimeagen/init.lua/commit/81c770d2d2e32e59916b39c7f5babbc8560f7a82) copilot testing
+* [4a96e645](https://github.com/ThePrimeagen/init.lua/commit/4a96e6457b0a0241ca7361ce62177aa6b9a33a38) fugitive mappings for push and pull
+* [a3bad06a](https://github.com/ThePrimeagen/init.lua/commit/a3bad06a4681c322538d609aa1c0bd18880f77c6) disabled eslint.  driving me crazy
 
-![first](main.png)
-![second](second.png)
-![third](third.png)
-![fourth](fourth.png)
 
-## Plugin List
-
-- [Lazy](https://github.com/folke/lazy.nvim) - Modern plugin manager
-- [Telescope](https://github.com/nvim-telescope/telescope.nvim) - Fuzzy finder
-- [Harpoon](https://github.com/ThePrimeagen/harpoon) - File navigation
-- [Treesitter](https://github.com/nvim-treesitter/nvim-treesitter) - Syntax highlighting
-- [Oil](https://github.com/stevearc/oil.nvim) - File explorer
-
-## Theme
-
-- [Vague](https://github.com/vague2k/vague.nvim) - Modern minimal theme
-
-## Change
-
-- [Change Catalog](CHANGELOG.md) - Modern minimal theme
-
-## Requirements
-
-- Neovim >= 0.9.0
-- Git
-- A [Nerd Font](https://www.nerdfonts.com/) (optional but recommended)
-
-### Language Servers
-
-- **Clangd** - C/C++ language server
-- **gopls** - Go language server
-- **rust_analyzer** - Rust language server
-- **node** - Required for various plugins
-
-## Installation
-
-1. Backup your existing Neovim configuration:
-
-   ```bash
-   mv ~/.config/nvim ~/.config/nvim.bak
-   mv ~/.local/share/nvim ~/.local/share/nvim.bak
-   ```
-
-2. Clone this repository:
-
-   ```bash
-   git clone https://github.com/tsdios/nvim.git ~/.config/nvim
-   ```
-
-3. Install language servers:
-
-   ```bash
-   # For C/C++
-   sudo apt install clangd  # Ubuntu/Debian
-   brew install llvm       # macOS
-
-   # For Rust
-   rustup component add rust-analyzer
-
-   # For Go
-   go install golang.org/x/tools/gopls@latest
-
-   # For Node.js
-   curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-   sudo apt install nodejs  # Ubuntu/Debian
-   ```
-
-## Post-Installation
-
-- Run `:checkhealth` to verify your setup
-- Run `:Lazy sync` to install/update plugins
-- Run `:TSUpdate` to install/update treesitter parsers
-
-## Customization
-
-Check out the following files to customize the configuration:
-
-- `lua/options.lua` - Neovim options
-- `lua/keymaps.lua` - Key mappings
-- `lua/plugins/` - Plugin configurations
-
-## Troubleshooting
-
-If you encounter any issues:
-
-1. Make sure all requirements are installed
-2. Check `:checkhealth` output
-3. Open an issue on GitHub

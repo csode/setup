@@ -51,3 +51,6 @@ if [ -n "$EMACS" ]; then
     export GREP_OPTIONS='--color=never'
     export PS1='pop@\u:\w\$ '
 fi
+
+# Initialize Starship prompt
+eval "$(starship init bash)"

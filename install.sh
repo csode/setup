@@ -104,7 +104,7 @@ backup_file() {
 
   if [ -e "$file" ]; then
     mkdir -p "$BACKUP_DIR"
-    
+
     if [ -d "$file" ]; then
       log "Backing up directory: ${MAGENTA}$file${RESET} → ${CYAN}$backup_path${RESET}"
       cp -R "$file" "$backup_path"
@@ -132,7 +132,7 @@ verify_repo() {
       error "Installation aborted."
     fi
   fi
-  
+
   log "Installing dotfiles from: ${CYAN}$REPO_DIR${RESET}"
 }
 
@@ -140,7 +140,7 @@ ask_install_method() {
   echo -e "${BOLD}${MAGENTA}Please choose how you want to install the dotfiles:${RESET}"
   echo -e "  ${BOLD}1)${RESET} ${CYAN}Create symbolic links${RESET} (recommended, easier to update)"
   echo -e "  ${BOLD}2)${RESET} ${CYAN}Copy files${RESET} (works better in some environments)"
-  
+
   while [ -z "$INSTALL_METHOD" ]; do
     read -p "Enter your choice [1/2]: " choice
     case $choice in
@@ -155,7 +155,7 @@ ask_install_method() {
         ;;
     esac
   done
-  
+
   log "Selected installation method: ${BOLD}${MAGENTA}${INSTALL_METHOD}${RESET}"
 }
 
@@ -163,7 +163,7 @@ ask_terminal_emulator() {
   echo -e "${BOLD}${MAGENTA}Please choose your preferred terminal emulator:${RESET}"
   echo -e "  ${BOLD}1)${RESET} ${CYAN}Kitty${RESET} (widely available, easy to install)"
   echo -e "  ${BOLD}2)${RESET} ${CYAN}Ghostty${RESET} (modern alternative, requires extra setup on some systems)"
-  
+
   while [ -z "$TERMINAL_EMULATOR" ]; do
     read -p "Enter your choice [1/2]: " choice
     case $choice in
@@ -178,7 +178,7 @@ ask_terminal_emulator() {
         ;;
     esac
   done
-  
+
   log "Selected terminal emulator: ${BOLD}${MAGENTA}${TERMINAL_EMULATOR}${RESET}"
 }
 
@@ -207,7 +207,7 @@ ask_shell() {
   done
 
   log "Selected shell: ${BOLD}${MAGENTA}${SHELL_CHOICE}${RESET}"
-  
+
   # Ask if they want to use your config for the chosen shell
   if ask_yes_no "Do you want to use my ${SHELL_CHOICE} configuration?" "y"; then
     USE_MY_CONFIG="true"
@@ -221,19 +221,19 @@ ask_shell() {
 ask_yes_no() {
   local prompt=$1
   local default=${2:-n}
-  
+
   local yn_prompt="[y/N]"
   if [ "$default" = "y" ]; then
     yn_prompt="[Y/n]"
   fi
-  
+
   read -p "$prompt $yn_prompt " -n 1 -r REPLY
   echo
-  
+
   if [ -z "$REPLY" ]; then
     REPLY=$default
   fi
-  
+
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     return 0
   else
@@ -243,9 +243,9 @@ ask_yes_no() {
 
 install_packages() {
   print_section "SYSTEM DEPENDENCIES"
-  
+
   log "Installing required system packages..."
-  
+
   case "$PACKAGE_MANAGER" in
     apt)
       sudo apt update
@@ -257,7 +257,7 @@ install_packages() {
           openssl libssl-dev libuv1-dev libluajit-5.1-dev \
           tmux libunibilium-dev libmsgpack-dev libtermkey-dev libvterm-dev \
           lua5.1 lua-lpeg lua-mpack lua-bitop; do
-        
+
         log "Installing $pkg..."
         if ! sudo apt install -y $pkg; then
           warning "Failed to install $pkg. Continuing with installation..."
@@ -301,31 +301,31 @@ install_packages() {
       fi
       ;;
   esac
-  
+
   # Install chosen terminal emulator
   install_terminal_emulator
-  
+
   # Enable and start libvirtd service
   if command -v systemctl >/dev/null 2>&1; then
     log "Enabling and starting libvirtd service..."
     sudo systemctl enable libvirtd
     sudo systemctl start libvirtd
-    
+
     # Add current user to libvirt group
     if getent group libvirt >/dev/null; then
       log "Adding user to libvirt group..."
       sudo usermod -aG libvirt $USER
     fi
   fi
-  
+
   success "System packages installed successfully!"
 }
 
 install_terminal_emulator() {
   print_section "TERMINAL EMULATOR INSTALLATION"
-  
+
   log "Installing ${CYAN}$TERMINAL_EMULATOR${RESET} terminal emulator..."
-  
+
   case "$TERMINAL_EMULATOR" in
     kitty)
       case "$PACKAGE_MANAGER" in
@@ -372,7 +372,7 @@ install_terminal_emulator() {
       esac
       ;;
   esac
-  
+
   success "$TERMINAL_EMULATOR installation complete!"
 }
 
@@ -382,7 +382,7 @@ install_terminal_emulator() {
 install_file() {
   local src=$1
   local dest=$2
-  
+
   mkdir -p "$(dirname "$dest")"
 
   if [ -e "$dest" ] || [ -L "$dest" ]; then
@@ -403,21 +403,21 @@ install_file() {
 
 install_configs() {
   print_section "CONFIGURATION FILES"
-  
+
   log "Installing configuration files..."
-  
+
   mkdir -p "$CONFIG_DIR"
-  
+
   # vim
   install_file "$REPO_DIR/.vimrc" "$HOME/.vimrc"
   install_file "$REPO_DIR/.vim" "$HOME/.vim"
-  
+
   # neovim
   install_file "$REPO_DIR/nvim" "$CONFIG_DIR/nvim"
-  
+
   # tmux
   install_file "$REPO_DIR/.tmux.conf" "$HOME/.tmux.conf"
-  
+
   # Install terminal emulator config
   case "$TERMINAL_EMULATOR" in
     kitty)
@@ -430,6 +430,7 @@ install_configs() {
 
   # i3
   install_file "$REPO_DIR/i3" "$CONFIG_DIR/i3"
+  install_file "$REPO_DIR/rofi" "$CONFIG_DIR/rofi"
 
   # Shell configuration - only install if user wants to use our config
   if [ "$USE_MY_CONFIG" = "true" ]; then
@@ -463,7 +464,7 @@ install_configs() {
   fi
 
   log "Checking for additional configurations..."
-  
+
   if [ -d "$REPO_DIR/config" ]; then
     for config_dir in "$REPO_DIR/config"/*; do
       if [ -d "$config_dir" ]; then
@@ -472,15 +473,15 @@ install_configs() {
       fi
     done
   fi
-  
+
   success "Configuration files installed successfully!"
 }
 
 install_optional_components() {
   print_section "OPTIONAL COMPONENTS"
-  
+
   log "Checking for optional components..."
-  
+
   if [ -d "$REPO_DIR/fonts" ]; then
     if ask_yes_no "Do you want to install custom fonts?"; then
       mkdir -p "$HOME/.local/share/fonts"
@@ -501,9 +502,9 @@ install_optional_components() {
 # └──────────────────────────┘
 install_flatpak() {
   print_section "FLATPAK SETUP"
-  
+
   log "Checking for Flatpak..."
-  
+
   if ! command -v flatpak >/dev/null 2>&1; then
     if ask_yes_no "Flatpak is not installed. Do you want to install it?"; then
       log "Installing Flatpak using $PACKAGE_MANAGER..."
@@ -531,13 +532,13 @@ install_flatpak() {
   else
     log "Flatpak is already installed."
   fi
-  
+
   # Add Flathub repository
   if ask_yes_no "Do you want to add the Flathub repository?"; then
     log "Adding Flathub repository..."
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     success "Flathub repository added successfully!"
-    
+
     # Install Brave browser
     if ask_yes_no "Do you want to install Brave browser from Flatpak?"; then
       log "Installing Brave browser..."
@@ -545,7 +546,7 @@ install_flatpak() {
       success "Brave browser installed successfully!"
     fi
   fi
-  
+
   return 0
 }
 
@@ -554,7 +555,7 @@ install_flatpak() {
 # └──────────────────────────┘
 install_starship() {
   print_section "STARSHIP PROMPT SETUP"
-  
+
   if ! command -v curl >/dev/null 2>&1; then
     log "Installing curl (required for Starship installation)..."
     case "$PACKAGE_MANAGER" in
@@ -576,13 +577,13 @@ install_starship() {
         ;;
     esac
   fi
-  
+
   log "Installing Starship prompt..."
-  
+
   if ask_yes_no "Do you want to install Starship prompt?"; then
     log "Downloading and running Starship installer..."
     curl -sS https://starship.rs/install.sh | sh -s -- -y
-    
+
     # Create Starship config if it doesn't exist in the dotfiles repo
     if [ ! -f "$REPO_DIR/starship.toml" ] && [ ! -f "$CONFIG_DIR/starship.toml" ]; then
       log "Creating default Starship configuration..."
@@ -631,7 +632,7 @@ format = "[$user]($style) "
 style_user = "bold blue"
 ' > "$CONFIG_DIR/starship.toml"
     fi
-    
+
     success "Starship prompt installed successfully!"
   else
     log "Skipping Starship prompt installation."
@@ -640,15 +641,15 @@ style_user = "bold blue"
 
 setup_zsh() {
   print_section "ZSH SETUP"
-  
+
   # Only proceed if ZSH is the chosen shell
   if [ "$SHELL_CHOICE" != "zsh" ]; then
     log "ZSH not selected as preferred shell. Skipping setup."
     return 0
   fi
-  
+
   log "Checking for ZSH..."
-  
+
   if ! command -v zsh >/dev/null 2>&1; then
     if ask_yes_no "ZSH is not installed. Do you want to install it?"; then
       log "Installing ZSH using $PACKAGE_MANAGER..."
@@ -676,12 +677,12 @@ setup_zsh() {
   else
     log "ZSH is already installed."
   fi
-  
+
   # Set ZSH as default shell
   log "Setting ZSH as default shell..."
   chsh -s $(which zsh)
   success "ZSH set as default shell! This will take effect on next login."
-  
+
   # Only install Oh My ZSH if user wants to use our config
   if [ "$USE_MY_CONFIG" = "true" ]; then
     # Install Oh My ZSH
@@ -692,10 +693,10 @@ setup_zsh() {
         backup_file "$HOME/.oh-my-zsh"
         rm -rf "$HOME/.oh-my-zsh"
       fi
-      
+
       # Save current shell to variable for safe return
       CURRENT_SHELL=$(ps -p $$ | awk 'NR==2 {print $4}')
-      
+
       # Use curl or wget to install Oh My ZSH
       if command -v curl >/dev/null 2>&1; then
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -705,15 +706,15 @@ setup_zsh() {
         warning "Neither curl nor wget is installed. Please install Oh My ZSH manually."
         return 1
       fi
-      
+
       success "Oh My ZSH installed successfully!"
-      
+
       # If we had a custom .zshrc in our dotfiles, restore it over Oh My ZSH's default
       if [ -f "$REPO_DIR/.zshrc" ]; then
         log "Restoring custom .zshrc from dotfiles..."
         install_file "$REPO_DIR/.zshrc" "$HOME/.zshrc"
       fi
-      
+
       # Add Starship init to .zshrc if Starship is installed
       if command -v starship >/dev/null 2>&1; then
         if ! grep -q "eval \"\$(starship init zsh)\"" "$HOME/.zshrc"; then
@@ -723,21 +724,21 @@ setup_zsh() {
       fi
     fi
   fi
-  
+
   return 0
 }
 
 setup_fish() {
   print_section "FISH SETUP"
-  
+
   # Only proceed if Fish is the chosen shell
   if [ "$SHELL_CHOICE" != "fish" ]; then
     log "Fish not selected as preferred shell. Skipping setup."
     return 0
   fi
-  
+
   log "Checking for Fish..."
-  
+
   if ! command -v fish >/dev/null 2>&1; then
     if ask_yes_no "Fish is not installed. Do you want to install it?"; then
       log "Installing Fish using $PACKAGE_MANAGER..."
@@ -766,17 +767,17 @@ setup_fish() {
   else
     log "Fish is already installed."
   fi
-  
+
   # Set Fish as default shell
   log "Setting Fish as default shell..."
   chsh -s $(which fish)
   success "Fish set as default shell! This will take effect on next login."
-  
+
   # Only install our config if user wants it
   if [ "$USE_MY_CONFIG" = "true" ]; then
     # Create Fish configuration directory if it doesn't exist
     mkdir -p "$CONFIG_DIR/fish"
-    
+
     # Link fish config files from dotfiles if they exist
     if [ -d "$REPO_DIR/fish" ]; then
       log "Installing Fish configuration from dotfiles..."
@@ -806,7 +807,7 @@ end
 ' > "$CONFIG_DIR/fish/config.fish"
       fi
     fi
-    
+
     # Add Starship init to config.fish if Starship is installed
     if command -v starship >/dev/null 2>&1; then
       if ! grep -q "starship init fish" "$CONFIG_DIR/fish/config.fish"; then
@@ -815,31 +816,31 @@ end
       fi
     fi
   fi
-  
+
   return 0
 }
 
 setup_bash() {
   print_section "BASH SETUP"
-  
+
   # Only proceed if Bash is the chosen shell
   if [ "$SHELL_CHOICE" != "bash" ]; then
     log "Bash not selected as preferred shell. Skipping setup."
     return 0
   fi
-  
+
   # Only install our config if user wants it
   if [ "$USE_MY_CONFIG" = "true" ]; then
     if [ -f "$REPO_DIR/.bashrc" ]; then
       log "Installing custom .bashrc..."
       install_file "$REPO_DIR/.bashrc" "$HOME/.bashrc"
     fi
-    
+
     if [ -f "$REPO_DIR/.bash_profile" ]; then
       log "Installing custom .bash_profile..."
       install_file "$REPO_DIR/.bash_profile" "$HOME/.bash_profile"
     fi
-    
+
     # Add Starship init to .bashrc if Starship is installed
     if command -v starship >/dev/null 2>&1; then
       if [ -f "$HOME/.bashrc" ] && ! grep -q "eval \"\$(starship init bash)\"" "$HOME/.bashrc"; then
@@ -848,17 +849,17 @@ setup_bash() {
       fi
     fi
   fi
-  
+
   return 0
 }
 
 setup_shell() {
   # Ask user which shell they prefer
   ask_shell
-  
+
   # Install and set up Starship prompt first
   install_starship
-  
+
   # Set up the chosen shell
   if [ "$SHELL_CHOICE" = "bash" ]; then
     setup_bash

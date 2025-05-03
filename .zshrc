@@ -106,8 +106,9 @@ export GTK_THEME=rose-pine-gtk
 export PATH="$HOME/.emacs.d/bin:$PATH"
 export PATH="$HOME/.config/emacs/bin:$PATH"
 export DOOMDIR=~/.config/doom
-set -o vi 
+set -o vi
 export PATH="$HOME/.nimble/bin:$PATH"
+export PATH=/home/csode/.nimble/bin:$PATH
 export GCM_CREDENTIAL_STORE=cache
 export GIT_TERMINAL_PROMPT=1
 export GIT_ASKPASS=git-credential-manager-core
@@ -122,10 +123,11 @@ alias gitter="~/scripts/gitter.sh"
 alias ccg="~/scripts/cpp.sh"
 alias packages="~/scripts/package.sh"
 alias vim="nvim"
+alias rm="rm -rf"
+alias love="~/packages/love.AppImage"
 
 alias luamake="/home/csode/packages/lua-language-server/3rd/luamake/luamake"
 eval "$(zoxide init zsh)"
 if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
   tmux attach-session -t main || tmux new-session -s main
 fi
-

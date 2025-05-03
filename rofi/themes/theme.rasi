@@ -1,0 +1,100 @@
+* {
+    background-color:            #232136;
+    border-color:                #9ccfd8;
+    text-color:                  #e0def4;
+
+    prompt-background:           #9ccfd8;
+    prompt-foreground:           #232136;
+    prompt-padding:              6px;
+
+    alternate-normal-background: #2a273f;
+    alternate-normal-foreground: @text-color;
+
+    selected-normal-background:  #286983;
+    selected-normal-foreground:  #e0def4;
+
+    spacing:                     4;
+}
+
+#window {
+    border:  2;
+    padding: 8;
+}
+
+#mainbox {
+    border:  0;
+    padding: 0;
+}
+
+#message {
+    border:  1px dash 0px 0px;
+    padding: 1px;
+}
+
+#listview {
+    fixed-height: 0;
+    border:       2px solid 0px 0px;
+    border-color: #393552;
+    spacing:      3px;
+    scrollbar:    true;
+    padding:      4px 0px 0px;
+}
+
+#element {
+    border:  0;
+    padding: 2px;
+}
+
+#element.selected.normal {
+    background-color: @selected-normal-background;
+    text-color:       @selected-normal-foreground;
+}
+
+#element.alternate.normal {
+    background-color: @alternate-normal-background;
+    text-color:       @alternate-normal-foreground;
+}
+
+#scrollbar {
+    width:        0px;
+    border:       0;
+    handle-width: 0px;
+    padding:      0;
+}
+
+#sidebar {
+    border: 2px dash 0px 0px;
+}
+
+#button.selected {
+    background-color: @selected-normal-background;
+    text-color:       @selected-normal-foreground;
+}
+
+#inputbar {
+    spacing: 0;
+    padding: 2px;
+}
+
+#case-indicator {
+    spacing: 0;
+}
+
+#entry {
+    padding: 6px 6px;
+    expand: false;
+    width: 12em;
+}
+
+#prompt {
+    padding:          @prompt-padding;
+    background-color: @prompt-background;
+    text-color:       @prompt-foreground;
+    border-radius:    2px;
+}
+
+element-text {
+    background-color: inherit;
+    text-color:       inherit;
+}
+
