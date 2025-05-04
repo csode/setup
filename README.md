@@ -1,17 +1,19 @@
-# My DEV Environment 
+# My DEV Environment
 
 ## Usage
 
 - **OS**: [PopOs](https://system76.com/pop/) – I love its minimalism and the powerful package manager.
 - **Window Manager**: [i3-wm](https://i3wm.org/) – I prefer tiling window managers, and no, I'm not switching to Wayland!
 - **Editor**: [Neovim](https://neovim.io/) – A better version of Vim—why not use it?
-- **Shell**: [Bash](https://www.gnu.org/software/bash/) – I enjoy using my own theme.
+- **Shell**: [ZSH](https://www.zsh.org/) – I use zsh.
+- **Shell theme**: [Oh my ZSH](https://ohmyz.sh/) – I use oh my zsh.
 - **Terminal Multiplexer**: [tmux](https://github.com/tmux/tmux/wiki) – My favorite terminal multiplexer.
 
 ## Add-ons
 
 1. **Dmenu** – Application launcher
-2. **Polybar** – Customizable status bar
+1. **ROfi** – I use this for script and dameon
+2. **i3 status bar** – default status bar
 3. **Kitty** – Terminal emulator
 
 ## Installation
@@ -46,10 +48,10 @@ I have included scripts on how to install and uninstall so follow the guide from
 
 ### Step 1 :
 ```sh
-git clone https://github.com/csode/setup.git
+git clone https://github.com/xsoder/setup.git
 ```
-### Step 2 : 
-- If u want to install both packages and the dotfiles 
+### Step 2 :
+- If u want to install both packages and the dotfiles
 ```sh
 ./packages.sh
 ./install.sh
@@ -62,7 +64,7 @@ git clone https://github.com/csode/setup.git
 Your are done
 
 ## How to uninstall :
-- If u want to remove  the dotfiles 
+- If u want to remove  the dotfiles
 ```sh
 ./uninstall.sh
 ```
