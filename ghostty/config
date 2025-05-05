@@ -1,6 +1,6 @@
 # Font settings
-font-size = 22
-font-family = Spleen 32x64
+font-size = 18
+font-family = JetBrainsMonoNL
 adjust-cell-height = 35%
 theme = rose-pine
 # Window appearance
@@ -16,7 +16,7 @@ mouse-hide-while-typing = true
 mouse-scroll-multiplier = 2
 
 # Colors
-background = #000000         
+background = #000000
 app-notifications = false
 background-opacity = 0.7
 #background-blur = 20

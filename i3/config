@@ -155,7 +155,7 @@ client.background        #2B2C2B
 bar {
         status_command i3status
 }
-for_window [class="kitty"]move to workspace $ws1
+for_window [class="ghostty"]move to workspace $ws1
 for_window [class="firefox"]move to workspace $ws3
 for_window [class="virt-manager"]move to workspace $ws7
 for_window [class="obs"] move to workspace $ws9
@@ -167,7 +167,7 @@ bindsym $mod+Shift+y workspace $ws10; exec pavucontrol
 bindsym $mod+b workspace $ws3; exec firefox
 bindsym $mod+t workspace $ws6; exec flatpak run org.kde.kdenlive
 bindsym $mod+Shift+f workspace $ws6; exec thunar
-bindsym $mod+Return workspace $ws1; exec kitty
+bindsym $mod+Return workspace $ws1; exec ghostty
 bindsym $mod+bracketleft workspace prev
 bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
