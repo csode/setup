@@ -155,7 +155,7 @@ client.background        #2B2C2B
 bar {
         status_command i3status
 }
-for_window [class="ghostty"]move to workspace $ws1
+for_window [class="kitty"]move to workspace $ws1
 for_window [class="firefox"]move to workspace $ws3
 for_window [class="virt-manager"]move to workspace $ws7
 for_window [class="obs"] move to workspace $ws9
@@ -167,17 +167,17 @@ bindsym $mod+Shift+y workspace $ws10; exec pavucontrol
 bindsym $mod+b workspace $ws3; exec firefox
 bindsym $mod+t workspace $ws6; exec flatpak run org.kde.kdenlive
 bindsym $mod+Shift+f workspace $ws6; exec thunar
-bindsym $mod+Return workspace $ws1; exec ghostty
+bindsym $mod+Return workspace $ws1; exec kitty
 bindsym $mod+bracketleft workspace prev
 bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
 bindsym $mod+bracketright workspace next
 bindsym $mod+Shift+s exec scrot ~/Pictures/Screenshot/screenshot.png
 bindsym $mod+o workspace $ws9 exec obs
-bindsym $mod+Shift+o workspace $ws9 exec virt-manager
 bindsym $mod+c workspace $ws2 exec emacs
 bindsym $mod+Shift+Delete exec --no-startup-id systemctl poweroff
 bindsym $mod+Shift+z exec --no-startup-id bash -c 'cd /home/csode/packages/boomer && ./boomer'
 bindsym $mod+period exec --no-startup-id ~/scripts/screenkey.sh
 bindsym $mod+Shift+period exec --no-startup-id pkill screenkey
 bindsym $mod+Shift+t exec --no-startup-id ~/.local/bin/rofi_script_launcher.sh
+bindsym $mod+Shift+o exec --no-startup-id ~/scripts/power.sh
